@@ -1,0 +1,6 @@
+hello worldGET /admin HTTP/1.1
+Host: example.com
+
+USER root
+PASS 1234
+Normal traffic DROP TABLE users; more dataª»Ìİ

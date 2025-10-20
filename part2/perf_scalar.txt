@@ -1,0 +1,16 @@
+# started on Mon Oct 20 12:36:44 2025
+
+
+ Performance counter stats for './scalar_scan signatures.txt big_sample_10GB.bin 0 100000000 /tmp/out_scalar_chunk.json':
+
+     1,394,523,267      cycles                                                                
+     5,322,475,482      instructions                     #    3.82  insn per cycle            
+        14,390,469      cache-references                                                      
+         7,927,303      cache-misses                     #   55.09% of all cache refs         
+
+       0.357575634 seconds time elapsed
+
+       0.265335000 seconds user
+       0.055278000 seconds sys
+
+

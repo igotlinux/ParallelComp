@@ -1,0 +1,5 @@
+GET /admin
+USER root
+PASS 1234
+\x90\x90\x90
+DROP TABLE
