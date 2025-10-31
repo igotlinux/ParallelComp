@@ -122,14 +122,31 @@ echo "-----------------------"
 # Send via Mudslide
 #if command -v mudslide >/dev/null 2>&1; then
 #  echo "Sending summary via mudslide to $TO_PHONE..."
-#  mudslide send "$TO_PHONE" "$SUMMARY" && echo "mudslide send OK" || echo "mudslide send FAILED"
+#  #mudslide send "$TO_PHONE" "$SUMMARY" && echo "mudslide send OK" || echo "mudslide send FAILED"
+#   mudslide send me "$SUMMARY"
 #else
 #  echo "mudslide CLI not found. Install and login to mudslide first."
 #fi
 
+#if command -v mudslide >/dev/null 2>&1; then
+#  echo "Sending summary via Mudslide to $TO_PHONE..."
+#  mudslide send me "$SUMMARY" && echo "✅ Mudslide send initiated successfully."
+  
+#  echo "Waiting for Mudslide to finish sending (please wait 10 seconds)..."
+#  # Give Mudslide enough time to deliver the message before the script exits
+#  for i in {10..1}; do
+#    printf "\r⏳ %2ds remaining..." "$i"
+#    sleep 1
+#  done
+#  echo -e "\n✔ Mudslide should now be done sending."
+#else
+#  echo "⚠️ Mudslide CLI not found. Please install and login first."
+#fi
+
+
 # Email settings (edit sender/recipient addresses below)
 FROM_EMAIL="omshingare120@gmail.com"
-TO_EMAIL="shingareop24.comp@coeptech.ac.in"
+TO_EMAIL="pcproject@coeptech.ac.in"
 EMAIL_SUBJECT="[Group-14] Bench Results - AVX vs Scalar"
 
 # ---------------------------

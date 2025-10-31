@@ -1,0 +1,22 @@
+# MPI Hostfile Configuration
+# Format: hostname slots=N
+# 
+# Example for local testing:
+localhost slots=4
+
+# Example for cluster with multiple nodes:
+# master-node slots=2
+# worker-node-1 slots=4
+# worker-node-2 slots=4
+# worker-node-3 slots=2
+
+# Notes:
+# - 'slots' indicates how many MPI processes can run on that node
+# - Set slots based on CPU cores available
+# - Master node typically runs 1 process (rank 0)
+# - Worker nodes run the remaining processes
+# 
+# For SSH-based clusters, ensure:
+# 1. Passwordless SSH is configured between all nodes
+# 2. The program binary and input files are accessible on all nodes
+# 3. All nodes have the same MPI installation

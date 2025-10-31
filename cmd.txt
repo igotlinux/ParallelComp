@@ -1,0 +1,6 @@
+ mpirun --mca btl tcp,self \
+                                         --mca btl_tcp_if_include 192.168.81.0/24 \
+                                         --mca oob_tcp_if_include 192.168.81.0/24 \
+                                         -np 2 -H tyrell,apurva   ./mpi_avx_scan signatures.txt big_sample_10GB.bin out.json
+
+mpicxx -O3 -mavx2 -std=c++17 -pthread chat_mpi.cpp -o mpi_avx_scan^

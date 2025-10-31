@@ -1,0 +1,176 @@
+[MASTER] Starting MPI scan with 1 processes
+[MASTER] Signatures loaded: 6
+[MASTER] File size: 1024 MB
+[MASTER] Process 0 RAM: 4724 MB
+[MASTER] Total RAM: 4724 MB
+[MASTER] Total chunks: 11 (~100MB each)
+[MASTER] Chunks per process: ~11
+[Process 0] Processing chunks 0 to 10
+[Process 0] Reading chunk 0 (offset=0, len=100MB)
+[Process 0] Completed chunk 0
+[Process 0] Reading chunk 1 (offset=104857600, len=100MB)
+[Process 0] Completed chunk 1
+[Process 0] Reading chunk 2 (offset=209715200, len=100MB)
+[Process 0] Completed chunk 2
+[Process 0] Reading chunk 3 (offset=314572800, len=100MB)
+[Process 0] Completed chunk 3
+[Process 0] Reading chunk 4 (offset=419430400, len=100MB)
+[Process 0] Completed chunk 4
+[Process 0] Reading chunk 5 (offset=524288000, len=100MB)
+[Process 0] Completed chunk 5
+[Process 0] Reading chunk 6 (offset=629145600, len=100MB)
+[Process 0] Completed chunk 6
+[Process 0] Reading chunk 7 (offset=734003200, len=100MB)
+[Process 0] Completed chunk 7
+[Process 0] Reading chunk 8 (offset=838860800, len=100MB)
+[Process 0] Completed chunk 8
+[Process 0] Reading chunk 9 (offset=943718400, len=100MB)
+[Process 0] Completed chunk 9
+[Process 0] Reading chunk 10 (offset=1048576000, len=24MB)
+[Process 0] Completed chunk 10
+[Process 0] Sending results (162 bytes)
+
+[MASTER] ======= Summary =======
+[MASTER] Total execution time: 1.41243 seconds
+[MASTER] Throughput: 724.993 MB/s
+[MASTER] Results written to: ./bench_out_local/output.json
+[MASTER] Signature matches:
+[MASTER]   MALWARE_SIG_001: 1 matches
+[MASTER]   ATTACK_PATTERN_XYZ: 1 matches
+[MASTER]   EXPLOIT_CODE_ABC: 1 matches
+[MASTER]   RANSOMWARE_KEY: 0 matches
+[MASTER]   SQL_INJECTION_001: 0 matches
+[MASTER]   XSS_PAYLOAD_123: 0 matches
+[MASTER] Total matches: 3
+[MASTER] Starting MPI scan with 1 processes
+[MASTER] Signatures loaded: 6
+[MASTER] File size: 1024 MB
+[MASTER] Process 0 RAM: 4724 MB
+[MASTER] Total RAM: 4724 MB
+[MASTER] Total chunks: 11 (~100MB each)
+[MASTER] Chunks per process: ~11
+[Process 0] Processing chunks 0 to 10
+[Process 0] Reading chunk 0 (offset=0, len=100MB)
+[Process 0] Completed chunk 0
+[Process 0] Reading chunk 1 (offset=104857600, len=100MB)
+[Process 0] Completed chunk 1
+[Process 0] Reading chunk 2 (offset=209715200, len=100MB)
+[Process 0] Completed chunk 2
+[Process 0] Reading chunk 3 (offset=314572800, len=100MB)
+[Process 0] Completed chunk 3
+[Process 0] Reading chunk 4 (offset=419430400, len=100MB)
+[Process 0] Completed chunk 4
+[Process 0] Reading chunk 5 (offset=524288000, len=100MB)
+[Process 0] Completed chunk 5
+[Process 0] Reading chunk 6 (offset=629145600, len=100MB)
+[Process 0] Completed chunk 6
+[Process 0] Reading chunk 7 (offset=734003200, len=100MB)
+[Process 0] Completed chunk 7
+[Process 0] Reading chunk 8 (offset=838860800, len=100MB)
+[Process 0] Completed chunk 8
+[Process 0] Reading chunk 9 (offset=943718400, len=100MB)
+[Process 0] Completed chunk 9
+[Process 0] Reading chunk 10 (offset=1048576000, len=24MB)
+[Process 0] Completed chunk 10
+[Process 0] Sending results (162 bytes)
+
+[MASTER] ======= Summary =======
+[MASTER] Total execution time: 1.41889 seconds
+[MASTER] Throughput: 721.691 MB/s
+[MASTER] Results written to: ./bench_out_local/output.json
+[MASTER] Signature matches:
+[MASTER]   MALWARE_SIG_001: 1 matches
+[MASTER]   ATTACK_PATTERN_XYZ: 1 matches
+[MASTER]   EXPLOIT_CODE_ABC: 1 matches
+[MASTER]   RANSOMWARE_KEY: 0 matches
+[MASTER]   SQL_INJECTION_001: 0 matches
+[MASTER]   XSS_PAYLOAD_123: 0 matches
+[MASTER] Total matches: 3
+[MASTER] Starting MPI scan with 1 processes
+[MASTER] Signatures loaded: 6
+[MASTER] File size: 1024 MB
+[MASTER] Process 0 RAM: 4723 MB
+[MASTER] Total RAM: 4723 MB
+[MASTER] Total chunks: 11 (~100MB each)
+[MASTER] Chunks per process: ~11
+[Process 0] Processing chunks 0 to 10
+[Process 0] Reading chunk 0 (offset=0, len=100MB)
+[Process 0] Completed chunk 0
+[Process 0] Reading chunk 1 (offset=104857600, len=100MB)
+[Process 0] Completed chunk 1
+[Process 0] Reading chunk 2 (offset=209715200, len=100MB)
+[Process 0] Completed chunk 2
+[Process 0] Reading chunk 3 (offset=314572800, len=100MB)
+[Process 0] Completed chunk 3
+[Process 0] Reading chunk 4 (offset=419430400, len=100MB)
+[Process 0] Completed chunk 4
+[Process 0] Reading chunk 5 (offset=524288000, len=100MB)
+[Process 0] Completed chunk 5
+[Process 0] Reading chunk 6 (offset=629145600, len=100MB)
+[Process 0] Completed chunk 6
+[Process 0] Reading chunk 7 (offset=734003200, len=100MB)
+[Process 0] Completed chunk 7
+[Process 0] Reading chunk 8 (offset=838860800, len=100MB)
+[Process 0] Completed chunk 8
+[Process 0] Reading chunk 9 (offset=943718400, len=100MB)
+[Process 0] Completed chunk 9
+[Process 0] Reading chunk 10 (offset=1048576000, len=24MB)
+[Process 0] Completed chunk 10
+[Process 0] Sending results (162 bytes)
+
+[MASTER] ======= Summary =======
+[MASTER] Total execution time: 1.42101 seconds
+[MASTER] Throughput: 720.613 MB/s
+[MASTER] Results written to: ./bench_out_local/output.json
+[MASTER] Signature matches:
+[MASTER]   MALWARE_SIG_001: 1 matches
+[MASTER]   ATTACK_PATTERN_XYZ: 1 matches
+[MASTER]   EXPLOIT_CODE_ABC: 1 matches
+[MASTER]   RANSOMWARE_KEY: 0 matches
+[MASTER]   SQL_INJECTION_001: 0 matches
+[MASTER]   XSS_PAYLOAD_123: 0 matches
+[MASTER] Total matches: 3
+[MASTER] Starting MPI scan with 1 processes
+[MASTER] Signatures loaded: 6
+[MASTER] File size: 1024 MB
+[MASTER] Process 0 RAM: 4723 MB
+[MASTER] Total RAM: 4723 MB
+[MASTER] Total chunks: 11 (~100MB each)
+[MASTER] Chunks per process: ~11
+[Process 0] Processing chunks 0 to 10
+[Process 0] Reading chunk 0 (offset=0, len=100MB)
+[Process 0] Completed chunk 0
+[Process 0] Reading chunk 1 (offset=104857600, len=100MB)
+[Process 0] Completed chunk 1
+[Process 0] Reading chunk 2 (offset=209715200, len=100MB)
+[Process 0] Completed chunk 2
+[Process 0] Reading chunk 3 (offset=314572800, len=100MB)
+[Process 0] Completed chunk 3
+[Process 0] Reading chunk 4 (offset=419430400, len=100MB)
+[Process 0] Completed chunk 4
+[Process 0] Reading chunk 5 (offset=524288000, len=100MB)
+[Process 0] Completed chunk 5
+[Process 0] Reading chunk 6 (offset=629145600, len=100MB)
+[Process 0] Completed chunk 6
+[Process 0] Reading chunk 7 (offset=734003200, len=100MB)
+[Process 0] Completed chunk 7
+[Process 0] Reading chunk 8 (offset=838860800, len=100MB)
+[Process 0] Completed chunk 8
+[Process 0] Reading chunk 9 (offset=943718400, len=100MB)
+[Process 0] Completed chunk 9
+[Process 0] Reading chunk 10 (offset=1048576000, len=24MB)
+[Process 0] Completed chunk 10
+[Process 0] Sending results (162 bytes)
+
+[MASTER] ======= Summary =======
+[MASTER] Total execution time: 1.42258 seconds
+[MASTER] Throughput: 719.82 MB/s
+[MASTER] Results written to: ./bench_out_local/output.json
+[MASTER] Signature matches:
+[MASTER]   MALWARE_SIG_001: 1 matches
+[MASTER]   ATTACK_PATTERN_XYZ: 1 matches
+[MASTER]   EXPLOIT_CODE_ABC: 1 matches
+[MASTER]   RANSOMWARE_KEY: 0 matches
+[MASTER]   SQL_INJECTION_001: 0 matches
+[MASTER]   XSS_PAYLOAD_123: 0 matches
+[MASTER] Total matches: 3

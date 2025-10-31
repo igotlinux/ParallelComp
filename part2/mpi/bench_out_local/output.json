@@ -1,0 +1,19 @@
+{
+  "ATTACK_PATTERN_XYZ": [
+    1073741839
+  ],
+  "EXPLOIT_CODE_ABC": [
+    1073741857
+  ],
+  "MALWARE_SIG_001": [
+    1073741824
+  ],
+  "RANSOMWARE_KEY": [],
+  "SQL_INJECTION_001": [],
+  "XSS_PAYLOAD_123": [],
+  "meta": {
+    "filesize": 1073741873,
+    "num_chunks": 11,
+    "num_processes": 1
+  }
+}
