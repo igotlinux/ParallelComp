@@ -3,6 +3,11 @@ Unit tests for Compiler Remarks and Disassembly Parsers
 """
 
 import unittest
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python")))
+
 from kernelguard.analysis.remarks import parse_gcc_remarks, parse_clang_remarks, parse_compiler_remarks
 from kernelguard.analysis.disasm import DisasmReport
 

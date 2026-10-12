@@ -9,7 +9,7 @@ import os
 
 class TestSeededBugs(unittest.TestCase):
     def test_seeded_bugs_detection_rate(self):
-        harness_bin = os.path.abspath("build/kg_harness")
+        harness_bin = os.environ.get("KERNELGUARD_HARNESS_BIN", os.path.abspath("build/kg_harness"))
         if not os.path.exists(harness_bin):
             subprocess.run(["cmake", "--build", "build"], check=True)
 

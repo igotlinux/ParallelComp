@@ -35,3 +35,13 @@ Homepage = "https://github.com/igotlinux/kernal-guard"
 Documentation = "https://igotlinux.github.io/kernal-guard/"
 Repository = "https://github.com/igotlinux/kernal-guard.git"
 "Bug Tracker" = "https://github.com/igotlinux/kernal-guard/issues"
+
+[tool.setuptools.packages.find]
+where = ["python"]
+
+[tool.pyright]
+include = ["python", "tests"]
+extraPaths = ["python"]
+
+[tool.pytest.ini_options]
+pythonpath = ["python"]

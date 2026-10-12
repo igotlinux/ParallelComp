@@ -4,7 +4,11 @@ Unit tests for Delta Debugging Minimizer and Reproducer Bundle Generator
 
 import unittest
 import os
+import sys
 import shutil
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python")))
+
 from kernelguard.minimization.ddmin import ddmin
 from kernelguard.minimization.reproducer import generate_reproducer_bundle, FailureBundleInfo
 

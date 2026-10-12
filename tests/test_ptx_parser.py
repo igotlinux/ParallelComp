@@ -3,6 +3,11 @@ Unit tests for NVIDIA PTX Parser and Inspection Engine
 """
 
 import unittest
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python")))
+
 from kernelguard.analysis.ptx_parser import PtxParser, verify_ptx_assertions
 
 
