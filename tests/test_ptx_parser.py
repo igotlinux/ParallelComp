@@ -120,6 +120,25 @@ class TestPtxParser(unittest.TestCase):
         )
         self.assertFalse(passed)
 
+    def test_predicated_and_atomic_instructions(self):
+        ptx = """
+        .version 7.5
+        .target sm_75
+        .address_size 64
+        .visible .entry dot_kernel() {
+            mul.f32 %f1, %f2, %f3;
+            @%p1 atom.global.add.f32 [%rd1], %f1;
+            ret;
+        }
+        """
+        report = PtxParser.parse_string(ptx)
+        self.assertIn("atom.global", report.instruction_histogram)
+        passed, msgs = verify_ptx_assertions(
+            report,
+            expected_instructions=["mul.f32", "atom.global"]
+        )
+        self.assertTrue(passed)
+
 
 if __name__ == "__main__":
     unittest.main()

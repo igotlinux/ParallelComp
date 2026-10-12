@@ -88,6 +88,14 @@ class PtxParser:
                 if not code or code.startswith("."):
                     continue
 
+                # Strip leading jump labels if present, e.g. "BB0_1: " or "$L__BB0_1: "
+                code = re.sub(r"^[a-zA-Z0-9_$.]+:\s*", "", code).strip()
+                if not code:
+                    continue
+
+                # Strip execution predicates if present, e.g. "@%p1 ", "@!%p1 ", "@p0 "
+                code = re.sub(r"^@!?%?[a-zA-Z0-9_]+\s+", "", code).strip()
+
                 # Tokenize: opcode operands
                 tokens = re.split(r"\s+", code, maxsplit=1)
                 opcode = tokens[0]
@@ -136,7 +144,7 @@ def verify_ptx_assertions(
                 # Also try partial matching on opcode (e.g. "fma" matching "fma.rn.f32")
                 matches = [k for k, v in report.instruction_histogram.items() if expected in k and v > 0]
                 if matches:
-                    messages.append(f"Expected PTX instruction '{expected}' found as '{matches[0]}'")
+                    messages.append(f"PASS: Expected PTX instruction '{expected}' found as '{matches[0]}' ({report.instruction_histogram[matches[0]]} occurrences)")
                 else:
                     passed = False
                     messages.append(f"FAIL: Expected PTX instruction '{expected}' was not generated in PTX output")
