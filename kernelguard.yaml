@@ -82,7 +82,7 @@ kernels:
       at_opt_levels: ["-O3", "-Ofast"]
       isa: "native"
     ptx_assertions:
-      expected_instructions: ["mul.f32", "red.relaxed"]
+      expected_instructions: ["mul.f32", "atom.global"]
 
 regression_gates:
   vectorization_regression_fatal: true
