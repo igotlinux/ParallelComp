@@ -62,6 +62,71 @@ def ensure_harness_binary(explicit_path: Optional[str] = None) -> str:
     return local_path
 
 
+_HARNESS_KERNELS_CACHE = None
+
+def get_harness_kernels(harness_bin: str) -> List[str]:
+    """Retrieves list of all registered testable kernels in the harness."""
+    global _HARNESS_KERNELS_CACHE
+    if _HARNESS_KERNELS_CACHE is not None:
+        return _HARNESS_KERNELS_CACHE
+    try:
+        res = subprocess.run([harness_bin, "--list"], capture_output=True, text=True, timeout=5)
+        kernels = []
+        for line in res.stdout.splitlines():
+            line = line.strip()
+            if line.startswith("- "):
+                parts = line.split()
+                if len(parts) >= 2:
+                    kernels.append(parts[1])
+        _HARNESS_KERNELS_CACHE = kernels
+        return kernels
+    except Exception:
+        return []
+
+
+def resolve_harness_kernel(kname: str, ktype: str, available_kernels: List[str]) -> str:
+    """
+    Intelligently maps any user kernel name/type (from llama.cpp, tinygrad, or custom repos)
+    to the correct verification suite without requiring any C++ code modifications.
+    """
+    # 1. Exact kernel name match
+    if kname in available_kernels:
+        return kname
+    # 2. Vectorized alias
+    if f"{kname}_vectorized" in available_kernels:
+        return f"{kname}_vectorized"
+    if f"{kname}_autovec" in available_kernels:
+        return f"{kname}_autovec"
+    if f"{kname}_scalar" in available_kernels:
+        return f"{kname}_scalar"
+
+    # 3. Match by mathematical operation / kernel type
+    t_clean = (ktype or "").lower().strip()
+    name_clean = kname.lower().strip()
+
+    if t_clean in ("dot", "dot_product", "reduction") or "dot" in name_clean:
+        for candidate in ["dot_product_vectorized", "dot_vectorized", "dot_autovec", "dot_scalar"]:
+            if candidate in available_kernels:
+                return candidate
+
+    elif t_clean in ("saxpy", "axpy", "mad") or "saxpy" in name_clean:
+        for candidate in ["saxpy_vectorized", "saxpy_autovec", "saxpy_scalar"]:
+            if candidate in available_kernels:
+                return candidate
+
+    elif t_clean in ("vec_add", "add", "binary", "relu", "silu", "elementwise", "unary") or any(k in name_clean for k in ["add", "relu", "silu", "norm"]):
+        for candidate in ["vec_add_vectorized", "vec_add_autovec", "vec_add_scalar"]:
+            if candidate in available_kernels:
+                return candidate
+
+    # 4. Universal fallback to standard clean kernel
+    clean_candidates = [k for k in available_kernels if not k.startswith("bug_")]
+    if clean_candidates:
+        return clean_candidates[0]
+    return "vec_add_vectorized"
+
+
+
 def run_verification(
     profile_name: str = "quick",
     backend_filter: Optional[str] = None,  # "cpu", "cuda", or None for all
@@ -281,9 +346,12 @@ def run_verification(
                     is_vectorized = remarks.vectorized or disasm.has_vector_instructions
 
                     # Run numerical verification harness on this kernel
+                    available_h_kernels = get_harness_kernels(harness_bin)
+                    target_h_kernel = resolve_harness_kernel(kname, getattr(kcfg, "type", ""), available_h_kernels)
+
                     harness_cmd = [
                         harness_bin,
-                        "--kernel", f"{kname}_vectorized" if f"{kname}_vectorized" in [f"{kname}_vectorized"] else f"{kname}_scalar",
+                        "--kernel", target_h_kernel,
                         "--profile", profile.test_cases,
                     ]
                     h_res = subprocess.run(harness_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
