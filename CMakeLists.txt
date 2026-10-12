@@ -5,9 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Enable compiler warnings
+# Enable compiler warnings for C++ targets
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall> $<$<COMPILE_LANGUAGE:CXX>:-Wextra> $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic> $<$<COMPILE_LANGUAGE:CXX>:-Wno-unused-parameter>)
 endif()
 
 include_directories(include)
@@ -44,6 +44,9 @@ if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES 75 80 86 89 90)
+    endif()
 
     add_executable(kg_cuda_harness
         src/kernels/cuda/cuda_harness.cu
