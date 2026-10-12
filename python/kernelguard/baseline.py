@@ -49,7 +49,7 @@ def check_regressions(report_data: Dict[str, Any], lock_data: Dict[str, Any], th
 
     for r in report_data.get("results", []):
         key = f"{r.get('name')}:{r.get('toolchain')}:{r.get('opt_level')}:{r.get('fp_mode')}"
-        if key not in baseline_entries:
+        if key not in baseline_entries or r.get("status") == "SKIPPED":
             continue
 
         base = baseline_entries[key]

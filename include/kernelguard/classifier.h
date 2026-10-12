@@ -182,15 +182,17 @@ inline CaseVerdict evaluate_contract(
 
         if (!ok) {
             // Classify cause using ablation/secondary references
-            // 1. FTZ ablation check
-            if (ftz_reference) {
+            // 1. FTZ ablation check (only applies if subnormals are actually present in input or output)
+            bool involves_subnormal = is_subnormal_float(exp) || is_subnormal_float(act) ||
+                                      (ftz_reference && is_subnormal_float(ftz_reference[i]));
+            if (ftz_reference && involves_subnormal) {
                 int64_t ftz_ulp = compute_float_ulp_distance(act, ftz_reference[i]);
                 if (ftz_ulp <= (contract.kind == ContractKind::ULP ? contract.max_ulp : 1)) {
                     return CaseVerdict::fail(VerdictType::DENORMAL_FTZ,
                         "Mismatch caused by Flush-To-Zero / Denormals-Are-Zero behavior",
                         i, act, exp, ulp_dist);
                 }
-            } else if (is_subnormal_float(exp) || is_subnormal_float(act)) {
+            } else if (involves_subnormal) {
                 float ftz_exp = flush_subnormal_to_zero(exp);
                 if (compute_float_ulp_distance(act, ftz_exp) <= 1) {
                     return CaseVerdict::fail(VerdictType::DENORMAL_FTZ,

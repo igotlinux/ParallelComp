@@ -14,13 +14,22 @@ class GccAdapter(ToolchainAdapter):
         self.binary_cxx = shutil.which(binary_cxx) or binary_cxx
 
     def is_available(self) -> bool:
-        return shutil.which(self.binary_cxx) is not None
+        if not shutil.which(self.binary_cxx):
+            return False
+        try:
+            out = subprocess.check_output([self.binary_cxx, "--version"], text=True, stderr=subprocess.DEVNULL)
+            # On macOS, /usr/bin/g++ is Apple Clang, not GNU GCC
+            if "clang" in out.lower():
+                return False
+            return True
+        except Exception:
+            return False
 
     def get_version(self) -> str:
         if not self.is_available():
             return "GCC not found"
         try:
-            out = subprocess.check_output([self.binary_cxx, "--version"], text=True)
+            out = subprocess.check_output([self.binary_cxx, "--version"], text=True, stderr=subprocess.DEVNULL)
             return out.splitlines()[0]
         except Exception:
             return "GCC (unknown version)"
