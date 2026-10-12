@@ -47,9 +47,9 @@ def check_regressions(report_data: Dict[str, Any], lock_data: Dict[str, Any], th
     regressions = []
     baseline_entries = lock_data.get("entries", {})
 
-    lock_arch = lock_data.get("arch", "")
-    curr_arch = report_data.get("host_info", {}).get("machine", "")
-    same_arch = (not lock_arch or not curr_arch or lock_arch == curr_arch)
+    lock_arch = lock_data.get("arch", "").lower()
+    curr_arch = (report_data.get("host", {}).get("machine", "") or report_data.get("host_info", {}).get("machine", "")).lower()
+    same_arch = bool(lock_arch and curr_arch and lock_arch == curr_arch)
 
     for r in report_data.get("results", []):
         key = f"{r.get('name')}:{r.get('toolchain')}:{r.get('opt_level')}:{r.get('fp_mode')}"

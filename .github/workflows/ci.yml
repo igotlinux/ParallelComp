@@ -8,13 +8,8 @@ on:
 
 jobs:
   linux-cpu-verification:
-    name: Linux CPU Verification (${{ matrix.compiler }})
+    name: Linux Verification (GCC 13 & Clang 18)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [gcc-13, clang-18]
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -27,16 +22,11 @@ jobs:
       - name: Install Toolchain & Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build valgrind libmpfr-dev
-          if [ "${{ matrix.compiler }}" = "gcc-13" ]; then
-            sudo apt-get install -y gcc-13 g++-13
-            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
-            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
-          elif [ "${{ matrix.compiler }}" = "clang-18" ]; then
-            sudo apt-get install -y clang-18 clang++-18
-            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
-            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
-          fi
+          sudo apt-get install -y cmake ninja-build valgrind libmpfr-dev gcc-13 g++-13 clang-18 clang++-18
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
           pip install --upgrade pip pyyaml .
 
       - name: Build C++ Harness & Unit Tests
@@ -64,7 +54,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kernelguard-reports-${{ matrix.compiler }}
+          name: kernelguard-reports-linux
           path: reports/
 
   macos-cpu-verification:
