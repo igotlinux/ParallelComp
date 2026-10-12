@@ -1,6 +1,7 @@
 {
   "version": 1,
   "updated_at": "2026-10-12 14:21:07",
+  "arch": "arm64",
   "entries": {
     "vec_add:gcc:-O0:strict": {
       "name": "vec_add",

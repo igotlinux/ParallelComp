@@ -47,6 +47,10 @@ def check_regressions(report_data: Dict[str, Any], lock_data: Dict[str, Any], th
     regressions = []
     baseline_entries = lock_data.get("entries", {})
 
+    lock_arch = lock_data.get("arch", "")
+    curr_arch = report_data.get("host_info", {}).get("machine", "")
+    same_arch = (not lock_arch or not curr_arch or lock_arch == curr_arch)
+
     for r in report_data.get("results", []):
         key = f"{r.get('name')}:{r.get('toolchain')}:{r.get('opt_level')}:{r.get('fp_mode')}"
         if key not in baseline_entries or r.get("status") == "SKIPPED":
@@ -60,10 +64,10 @@ def check_regressions(report_data: Dict[str, Any], lock_data: Dict[str, Any], th
                 f"Vectorization regression for {key}: previously vectorized, now scalar"
             )
 
-        # 2. Check Instruction Count Regression
+        # 2. Check Instruction Count Regression (strictly architecture-matched)
         base_icount = base.get("instruction_count")
         curr_icount = r.get("instruction_count")
-        if base_icount and curr_icount:
+        if same_arch and base_icount and curr_icount:
             increase_pct = ((curr_icount - base_icount) / base_icount) * 100.0
             if increase_pct > threshold_pct:
                 regressions.append(
