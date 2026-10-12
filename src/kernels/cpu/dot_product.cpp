@@ -75,6 +75,46 @@ float dot_autovec(const float* __restrict__ x,
     return sum;
 }
 
+// 4. llama.cpp Production Kernel (ggml_vec_dot_f32)
+float ggml_vec_dot_f32(const float* x, const float* y, size_t n) {
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+    float32x4_t sumv = vdupq_n_f32(0.0f);
+    size_t i = 0;
+    for (; i + 4 <= n; i += 4) {
+        sumv = vmlaq_f32(sumv, vld1q_f32(x + i), vld1q_f32(y + i));
+    }
+    float sum = vaddvq_f32(sumv);
+    for (; i < n; ++i) {
+        sum += x[i] * y[i];
+    }
+    return sum;
+#elif defined(__AVX2__) || defined(__AVX__)
+    __m256 sumv = _mm256_setzero_ps();
+    size_t i = 0;
+    for (; i + 8 <= n; i += 8) {
+#if defined(__FMA__)
+        sumv = _mm256_fmadd_ps(_mm256_loadu_ps(x + i), _mm256_loadu_ps(y + i), sumv);
+#else
+        sumv = _mm256_add_ps(_mm256_mul_ps(_mm256_loadu_ps(x + i), _mm256_loadu_ps(y + i)), sumv);
+#endif
+    }
+    float temp[8];
+    _mm256_storeu_ps(temp, sumv);
+    float sum = 0.0f;
+    for (int k = 0; k < 8; ++k) sum += temp[k];
+    for (; i < n; ++i) {
+        sum += x[i] * y[i];
+    }
+    return sum;
+#else
+    float sum = 0.0f;
+    for (size_t i = 0; i < n; ++i) {
+        sum += x[i] * y[i];
+    }
+    return sum;
+#endif
+}
+
 void register_dot_kernels() {
     auto& reg = KernelRegistry::instance();
     // Dot product accumulation order differs across vector widths, so relative bound applies
@@ -92,6 +132,11 @@ void register_dot_kernels() {
                      "SIMD vectorized dot product with horizontal reduction", "vector");
     reg.register_dot("dot_product_autovec", dot_autovec, Contract::bound(1e-4, 1e-5),
                      "Compiler autovectorized dot product", "autovec");
+
+    // Real-world production llama.cpp kernel
+    reg.register_dot("ggml_vec_dot_f32", ggml_vec_dot_f32, Contract::bound(1e-4, 1e-5),
+                     "llama.cpp production transformer dot product", "llama_cpp");
 }
 
 } // namespace kernelguard
+
