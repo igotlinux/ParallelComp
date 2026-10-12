@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KernelGuard — Production Compiler Verification & Performance Gating</title>
+    <meta name="description" content="Automated compiler verification, numerical drift detection, and vectorization regression gatekeeper for C/C++ and NVIDIA CUDA.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070a12;
+            --bg-card: rgba(16, 23, 41, 0.75);
+            --bg-card-hover: rgba(23, 33, 58, 0.9);
+            --border: rgba(56, 75, 112, 0.4);
+            --border-glow: rgba(88, 166, 255, 0.4);
+            --text-main: #f0f6fc;
+            --text-muted: #8b9bb4;
+            --accent: #388bfd;
+            --accent-gradient: linear-gradient(135deg, #388bfd 0%, #a371f7 100%);
+            --accent-green: #3fb950;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Background */
+        .glow-sphere {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 139, 253, 0.12) 0%, rgba(163, 113, 247, 0.05) 50%, transparent 70%);
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .glow-1 { top: -100px; right: -100px; }
+        .glow-2 { bottom: 10%; left: -150px; }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .logo-badge {
+            background: var(--accent-gradient);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(56, 139, 253, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(56, 139, 253, 0.55);
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 90px 0 60px;
+            text-align: center;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(56, 139, 253, 0.12);
+            border: 1px solid rgba(56, 139, 253, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1.5px;
+            margin-bottom: 24px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .gradient-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 19px;
+            color: var(--text-muted);
+            max-width: 720px;
+            margin: 0 auto 36px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 50px;
+        }
+
+        /* Interactive Terminal Card */
+        .terminal-window {
+            background: #0d121f;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            text-align: left;
+            margin: 0 auto;
+            max-width: 960px;
+        }
+
+        .terminal-bar {
+            background: #141b2d;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(56, 139, 253, 0.2);
+            color: #fff;
+        }
+
+        .terminal-body {
+            padding: 24px;
+            font-family: var(--font-code);
+            font-size: 13px;
+            line-height: 1.7;
+            min-height: 240px;
+            overflow-x: auto;
+        }
+
+        .c-green { color: var(--accent-green); }
+        .c-blue { color: var(--accent); }
+        .c-red { color: var(--accent-red); }
+        .c-yellow { color: var(--accent-orange); }
+        .c-dim { color: #57657a; }
+
+        /* Feature Matrix */
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+
+        .section-desc {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 17px;
+            max-width: 640px;
+            margin: 0 auto 50px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 100px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-4px);
+            background: var(--bg-card-hover);
+        }
+
+        .feature-icon {
+            font-size: 28px;
+            margin-bottom: 18px;
+            display: inline-block;
+        }
+
+        .feature-card h3 {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* PRICING SECTION */
+        .pricing-section {
+            padding: 80px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(14, 20, 36, 0.6) 100%);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 80px;
+        }
+
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 48px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .toggle-label.active { color: #fff; }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #1f293d;
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            transition: .3s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .discount-badge {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        @media (max-width: 900px) {
+            .pricing-grid { grid-template-columns: 1fr; }
+        }
+
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px 30px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s;
+        }
+
+        .pricing-card.featured {
+            border-color: rgba(56, 139, 253, 0.8);
+            box-shadow: 0 0 40px rgba(56, 139, 253, 0.2);
+            transform: scale(1.03);
+            background: rgba(18, 27, 49, 0.95);
+        }
+
+        .popular-pill {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-gradient);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .plan-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .plan-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            min-height: 40px;
+        }
+
+        .plan-price {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .plan-price .period {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 32px;
+            flex-grow: 1;
+        }
+
+        .plan-features li {
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d1d9e6;
+        }
+
+        .plan-features li::before {
+            content: "✓";
+            color: var(--accent-green);
+            font-weight: 800;
+        }
+
+        /* CI/CD Integration snippet */
+        .cicd-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 36px;
+            margin-bottom: 80px;
+        }
+
+        .code-block {
+            background: #090d17;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: var(--font-code);
+            font-size: 13px;
+            color: #e6edf3;
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        /* ROI Calculator */
+        .calculator-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 80px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        @media (max-width: 800px) {
+            .calculator-card { grid-template-columns: 1fr; }
+        }
+
+        .calc-input-group {
+            margin-bottom: 20px;
+        }
+
+        .calc-input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .calc-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #1f293d;
+            outline: none;
+        }
+
+        .calc-result {
+            background: rgba(56, 139, 253, 0.08);
+            border: 1px solid rgba(56, 139, 253, 0.25);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .calc-savings {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--accent-green);
+            margin: 12px 0 6px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-sphere glow-1"></div>
+    <div class="glow-sphere glow-2"></div>
+
+    <div class="container">
+        <!-- Navigation -->
+        <nav>
+            <a href="#" class="logo">
+                <span>🛡️ KernelGuard</span>
+                <span class="logo-badge">v1.0 Ready</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#ci-cd">CI/CD Setup</a>
+                <a href="#pricing">Pricing</a>
+                <a href="https://github.com/igotlinux/kernal-guard" target="_blank" class="btn btn-outline">GitHub Repo</a>
+                <a href="#pricing" class="btn btn-primary">Start Trial</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-pill">
+                <span>⚡ Automated Compiler Verification & Optimization Gating</span>
+            </div>
+            <h1>Did your toolchain or refactor <br><span class="gradient-text">silently change your numerics</span> or kill vectorization?</h1>
+            <p>KernelGuard tests C/C++ and CUDA numerical kernels across compilers, flags, and architectures. It stops numerical drift, catches buffer overflows, and generates instant standalone reproducer bundles on PRs.</p>
+
+            <div class="hero-actions">
+                <a href="#pricing" class="btn btn-primary">View Pricing & Plans</a>
+                <a href="#ci-cd" class="btn btn-outline">Add to GitHub Actions</a>
+            </div>
+
+            <!-- Interactive Terminal Demonstration -->
+            <div class="terminal-window">
+                <div class="terminal-bar">
+                    <div class="terminal-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="terminal-tabs">
+                        <button class="tab-btn active" onclick="switchTab('run')">Matrix Run</button>
+                        <button class="tab-btn" onclick="switchTab('repro')">Reproducer Bundle</button>
+                        <button class="tab-btn" onclick="switchTab('ptx')">CUDA PTX Inspection</button>
+                    </div>
+                </div>
+                <div class="terminal-body" id="terminal-content">
+                    <span class="c-dim">$ kg run --profile quick</span><br>
+                    <span class="c-blue">Starting KernelGuard Verification Matrix...</span><br>
+                    <span class="c-dim">Host: Linux x86_64 | AVX2: Yes | Compilers: [GCC 14, Clang 18, NVCC 12]</span><br>
+                    --------------------------------------------------------------------------------<br>
+                    &nbsp;&nbsp;<span class="c-green">[PASS]</span> vec_add (gcc -O3 strict)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Verified contract <span class="c-dim">(SIMD: True, vaddps)</span><br>
+                    &nbsp;&nbsp;<span class="c-green">[PASS]</span> saxpy (clang -O3 strict)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Verified contract <span class="c-dim">(SIMD: True, vfmadd)</span><br>
+                    &nbsp;&nbsp;<span class="c-red">[FAIL]</span> bug_tail_missing (clang -O3)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="c-red">UNWRITTEN_ELEMENTS</span> (canary pattern intact)<br>
+                    &nbsp;&nbsp;<span class="c-green">[PASS]</span> saxpy_cuda (nvcc -ptx)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Verified PTX assertions <span class="c-dim">('fma.rn.f32' found)</span><br>
+                    --------------------------------------------------------------------------------<br>
+                    <span class="c-yellow">⚡ Generated reproducer bundle:</span> <span class="c-blue">repro_bundles/fail_tail_missing_clang_O3/</span><br>
+                    <span class="c-green">✓ Reports written to reports/report.html, junit_report.xml, and results.sarif</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Matrix -->
+        <section id="features" style="padding-top: 60px;">
+            <h2 class="section-title">Built for Systems & Compiler Engineers</h2>
+            <p class="section-desc">Traditional benchmarks only measure wall-clock latency. KernelGuard tests mathematical correctness, hardware memory safety, and compiler code generation.</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📐</div>
+                    <h3>~106-bit Double-Double Oracle</h3>
+                    <p>Uses Knuth's 2Sum and Dekker's 2Prod transformations to create an in-process, zero-dependency reference with ~106 bits of precision—an exact oracle for float32 operations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Guard-Page Memory Envelopes</h3>
+                    <p>Wraps allocations in virtual memory <code>PROT_NONE</code> guard pages and 64-byte canaries. Catches off-by-one SIMD buffer overruns instantly without crashing the runner.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Optimization Remarks & Disassembly</h3>
+                    <p>Parses GCC and Clang vectorization records, checks disassembly opcodes, and flags regressions when loops de-vectorize due to refactors.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>NVIDIA CUDA & PTX Inspection</h3>
+                    <p>Compiles CUDA to PTX assembly and parses instruction histograms. Confirms FMA utilization, memory spaces, and launch boundaries across toolchains.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Delta Debugging Minimizer</h3>
+                    <p>When a test fails, Zeller's <code>ddmin</code> algorithm automatically shrinks the failing array into a 1-minimal test case and outputs a zero-dependency <code>repro.cpp</code>.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Committed Lockfile Regression Gates</h3>
+                    <p>Tracks vectorization state and instruction counts in <code>kernelguard_lock.json</code>. Rejects PRs that inflate instruction counts by more than 2%.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CI/CD Quick Integration -->
+        <section id="ci-cd">
+            <div class="cicd-box">
+                <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Drop into your GitHub Actions in 30 Seconds</h2>
+                <p style="color: var(--text-muted); font-size: 14px;">KernelGuard runs as a standard GitHub Action. Simply add it to your <code>.github/workflows/ci.yml</code>:</p>
+                <div class="code-block">
+name: "Kernel Verification"<br>
+on: [pull_request]<br>
+<br>
+jobs:<br>
+&nbsp;&nbsp;verify:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;runs-on: ubuntu-latest<br>
+&nbsp;&nbsp;&nbsp;&nbsp;steps:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: actions/checkout@v4<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- name: Run KernelGuard Verification Matrix<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;uses: <span class="c-blue">igotlinux/kernal-guard@v1</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;profile: 'quick'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;backend: 'cpu'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fail-on-regression: true
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive ROI Calculator -->
+        <div class="calculator-card">
+            <div>
+                <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 12px;">Calculate Your Team's Debugging Savings</h3>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Tracking down silent numerical divergence or unexpected vectorization loss takes days of manual disassembly and gdb sessions.</p>
+                
+                <div class="calc-input-group">
+                    <label>Engineers writing C++/CUDA kernels: <span id="val-devs" style="color: var(--accent);">8</span></label>
+                    <input type="range" class="calc-slider" id="slider-devs" min="1" max="50" value="8" oninput="updateROI()">
+                </div>
+                <div class="calc-input-group">
+                    <label>Compiler/Flag upgrades per year: <span id="val-upgrades" style="color: var(--accent);">4</span></label>
+                    <input type="range" class="calc-slider" id="slider-upgrades" min="1" max="12" value="4" oninput="updateROI()">
+                </div>
+            </div>
+            <div class="calc-result">
+                <div style="font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Estimated Annual Savings</div>
+                <div class="calc-savings" id="calc-amount">$38,400</div>
+                <div style="font-size: 13px; color: var(--text-muted);">Saved in developer time & avoided production regressions.</div>
+            </div>
+        </div>
+
+        <!-- PRICING SECTION -->
+        <section id="pricing" class="pricing-section">
+            <h2 class="section-title">Transparent, Developer-Friendly Pricing</h2>
+            <p class="section-desc">Free for open-source and individual developers. Paid plans scale with your automated CI runner capacity, team size, and enterprise GPU test farms.</p>
+
+            <div class="billing-toggle">
+                <span class="toggle-label active" id="label-monthly">Monthly Billing</span>
+                <label class="switch">
+                    <input type="checkbox" id="pricing-toggle" onchange="toggleBilling()">
+                    <span class="slider"></span>
+                </label>
+                <span class="toggle-label" id="label-annual">Annual Billing <span class="discount-badge">Save 20%</span></span>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Tier 1: Open Source -->
+                <div class="pricing-card">
+                    <div class="plan-name">Community / Open Source</div>
+                    <div class="plan-desc">For individual developers, academic researchers, and public open-source repos.</div>
+                    <div class="plan-price">
+                        <span>$0</span>
+                        <span class="period">/ forever</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>Full C++ Harness & Double-Double Oracle</li>
+                        <li>Local CLI (<code>kg run</code>, <code>kg repro</code>)</li>
+                        <li>GCC and Clang Matrix Testing</li>
+                        <li>HTML, JSON, and JUnit Reports</li>
+                        <li>Standard GitHub Action Integration</li>
+                        <li>Community Discord Support</li>
+                    </ul>
+                    <a href="https://github.com/igotlinux/kernal-guard" target="_blank" class="btn btn-outline" style="text-align: center; justify-content: center;">Clone on GitHub</a>
+                </div>
+
+                <!-- Tier 2: Pro Team -->
+                <div class="pricing-card featured">
+                    <div class="popular-pill">Most Popular</div>
+                    <div class="plan-name">Pro / Team</div>
+                    <div class="plan-desc">For commercial teams building ML inference, audio/DSP, and graphics engines.</div>
+                    <div class="plan-price">
+                        <span id="price-pro">$99</span>
+                        <span class="period">/ seat / month</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>Everything in Community</li>
+                        <li><strong>Automated PR Quality Gatekeeper</strong></li>
+                        <li><strong>Delta Debugging Minimizer (ddmin)</strong></li>
+                        <li><strong>Standalone <code>repro.cpp</code> Generation</strong></li>
+                        <li>Compiler Vectorization Remark Tracking</li>
+                        <li>Lockfile Regression Gates (<code>kernelguard_lock.json</code>)</li>
+                        <li>SARIF Upload to GitHub Code Scanning</li>
+                        <li>Email & Priority Slack Support</li>
+                    </ul>
+                    <a href="mailto:sales@kernelguard.dev?subject=KernelGuard%20Pro%20Trial" class="btn btn-primary" style="text-align: center; justify-content: center;">Start 14-Day Free Trial</a>
+                </div>
+
+                <!-- Tier 3: Enterprise -->
+                <div class="pricing-card">
+                    <div class="plan-name">Enterprise / GPU Farm</div>
+                    <div class="plan-desc">For organizations requiring NVIDIA GPU hardware runners and custom toolchains.</div>
+                    <div class="plan-price">
+                        <span id="price-enterprise">$499</span>
+                        <span class="period">/ repo / month</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li>Everything in Pro</li>
+                        <li><strong>Live NVIDIA GPU Hardware CI Runners</strong></li>
+                        <li><strong>Automated PTX Assembly Assertions</strong></li>
+                        <li>Pinned Toolchain Docker Images by Digest</li>
+                        <li>Custom ISA Support (AVX-512, SVE2, SME)</li>
+                        <li>Enterprise Single Sign-On (SSO / SAML)</li>
+                        <li>Private Self-Hosted Runner Licensing</li>
+                        <li>Dedicated Verification Engineer & SLA</li>
+                    </ul>
+                    <a href="mailto:sales@kernelguard.dev?subject=Enterprise%20Inquiry" class="btn btn-outline" style="text-align: center; justify-content: center;">Contact Enterprise Sales</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p style="margin-bottom: 8px;"><strong>KernelGuard</strong> — Production-Quality Compiler Verification Framework. Released under the <a href="https://github.com/igotlinux/kernal-guard/blob/main/LICENSE">Apache-2.0 License</a>.</p>
+                <p>Designed for systems engineers, numerical libraries, and compiler developers at NVIDIA, LLVM, and high-performance computing teams.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function switchTab(type) {
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const term = document.getElementById('terminal-content');
+            if (type === 'run') {
+                term.innerHTML = `
+                    <span class="c-dim">$ kg run --profile quick</span><br>
+                    <span class="c-blue">Starting KernelGuard Verification Matrix...</span><br>
+                    <span class="c-dim">Host: Linux x86_64 | AVX2: Yes | Compilers: [GCC 14, Clang 18, NVCC 12]</span><br>
+                    --------------------------------------------------------------------------------<br>
+                    &nbsp;&nbsp;<span class="c-green">[PASS]</span> vec_add (gcc -O3 strict)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Verified contract <span class="c-dim">(SIMD: True, vaddps)</span><br>
+                    &nbsp;&nbsp;<span class="c-green">[PASS]</span> saxpy (clang -O3 strict)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Verified contract <span class="c-dim">(SIMD: True, vfmadd)</span><br>
+                    &nbsp;&nbsp;<span class="c-red">[FAIL]</span> bug_tail_missing (clang -O3)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="c-red">UNWRITTEN_ELEMENTS</span> (canary pattern intact)<br>
+                    &nbsp;&nbsp;<span class="c-green">[PASS]</span> saxpy_cuda (nvcc -ptx)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Verified PTX assertions <span class="c-dim">('fma.rn.f32' found)</span><br>
+                    --------------------------------------------------------------------------------<br>
+                    <span class="c-yellow">⚡ Generated reproducer bundle:</span> <span class="c-blue">repro_bundles/fail_tail_missing_clang_O3/</span><br>
+                    <span class="c-green">✓ Reports written to reports/report.html, junit_report.xml, and results.sarif</span>
+                `;
+            } else if (type === 'repro') {
+                term.innerHTML = `
+                    <span class="c-dim">$ kg repro fail_tail_missing_clang_O3</span><br>
+                    <span class="c-blue">=== Reproducer Bundle: fail_tail_missing_clang_O3 ===</span><br>
+                    <span class="c-dim">{</span><br>
+                    &nbsp;&nbsp;"kernel": <span class="c-green">"bug_tail_missing"</span>,<br>
+                    &nbsp;&nbsp;"classification": <span class="c-red">"UNWRITTEN_ELEMENTS"</span>,<br>
+                    &nbsp;&nbsp;"minimized_input_length": <span class="c-yellow">5</span>,<br>
+                    &nbsp;&nbsp;"failing_input": [1.0, 2.0, 3.0, 4.0, 5.0],<br>
+                    &nbsp;&nbsp;"details": "Vector loop processed N=4, remaining 1 tail element was left untouched"<br>
+                    <span class="c-dim">}</span><br>
+                    <span class="c-green">✓ Generated standalone repro.cpp with zero dependencies.</span><br>
+                    <span class="c-dim">$ cd repro_bundles/fail_tail_missing_clang_O3 && ./build.sh</span>
+                `;
+            } else if (type === 'ptx') {
+                term.innerHTML = `
+                    <span class="c-dim">$ kg run --backend cuda --profile quick</span><br>
+                    <span class="c-blue">Analyzing NVIDIA PTX Assembly...</span><br>
+                    <span class="c-dim">Kernel: saxpy_cuda_kernel (.target sm_75, .address_size 64)</span><br>
+                    --------------------------------------------------------------------------------<br>
+                    &nbsp;&nbsp;<span class="c-green">PASS:</span> Expected PTX instruction <span class="c-blue">'fma.rn.f32'</span> present (1 occurrence)<br>
+                    &nbsp;&nbsp;<span class="c-green">PASS:</span> Expected PTX instruction <span class="c-blue">'st.global.f32'</span> present (1 occurrence)<br>
+                    &nbsp;&nbsp;<span class="c-green">PASS:</span> Forbidden PTX instruction <span class="c-blue">'atom.global'</span> correctly absent<br>
+                    --------------------------------------------------------------------------------<br>
+                    <span class="c-green">✓ PTX pattern assertions verified across 18 instructions.</span>
+                `;
+            }
+        }
+
+        function toggleBilling() {
+            const isAnnual = document.getElementById('pricing-toggle').checked;
+            document.getElementById('label-monthly').classList.toggle('active', !isAnnual);
+            document.getElementById('label-annual').classList.toggle('active', isAnnual);
+
+            document.getElementById('price-pro').innerText = isAnnual ? '$79' : '$99';
+            document.getElementById('price-enterprise').innerText = isAnnual ? '$399' : '$499';
+        }
+
+        function updateROI() {
+            const devs = parseInt(document.getElementById('slider-devs').value);
+            const upgrades = parseInt(document.getElementById('slider-upgrades').value);
+            document.getElementById('val-devs').innerText = devs;
+            document.getElementById('val-upgrades').innerText = upgrades;
+
+            // Average engineering hour cost ~$100, saving approx 40 hours per upgrade cycle across team
+            const hoursSaved = devs * upgrades * 12;
+            const savings = hoursSaved * 100;
+            document.getElementById('calc-amount').innerText = '$' + savings.toLocaleString();
+        }
+    </script>
+</body>
+</html>

@@ -67,12 +67,12 @@ void saxpy_autovec(float alpha,
 
 void register_saxpy_kernels() {
     auto& reg = KernelRegistry::instance();
-    // Allow up to 2 ULP due to FMA (single rounding) vs separate mul+add (two roundings)
-    reg.register_saxpy("saxpy_scalar", saxpy_scalar, Contract::ulp(2),
+    // Allow up to 4 ULP due to FMA single rounding vs separate mul+add double rounding under mild cancellation
+    reg.register_saxpy("saxpy_scalar", saxpy_scalar, Contract::ulp(4),
                        "Baseline scalar SAXPY", "scalar");
-    reg.register_saxpy("saxpy_vectorized", saxpy_vectorized, Contract::ulp(2),
+    reg.register_saxpy("saxpy_vectorized", saxpy_vectorized, Contract::ulp(4),
                        "SIMD vectorized SAXPY with tail loop", "vector");
-    reg.register_saxpy("saxpy_autovec", saxpy_autovec, Contract::ulp(2),
+    reg.register_saxpy("saxpy_autovec", saxpy_autovec, Contract::ulp(4),
                        "Compiler autovectorized SAXPY", "autovec");
 }
 

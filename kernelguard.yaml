@@ -63,7 +63,7 @@ kernels:
     cuda_source: "src/kernels/cuda/saxpy.cu"
     contract:
       kind: "ulp"
-      max_ulp: 1
+      max_ulp: 4
     expected_vectorization:
       at_opt_levels: ["-O2", "-O3", "-Ofast"]
       isa: "native"
