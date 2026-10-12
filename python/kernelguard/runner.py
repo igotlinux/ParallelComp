@@ -27,7 +27,18 @@ from .reporting.summary_reporter import generate_summary_markdown
 from .baseline import load_baseline, check_regressions
 
 
-def ensure_harness_binary() -> str:
+def ensure_harness_binary(explicit_path: Optional[str] = None) -> str:
+    if explicit_path and os.path.exists(explicit_path):
+        return os.path.abspath(explicit_path)
+
+    env_path = os.environ.get("KERNELGUARD_HARNESS_BIN")
+    if env_path and os.path.exists(env_path):
+        return os.path.abspath(env_path)
+
+    which_bin = shutil.which("kg_harness")
+    if which_bin:
+        return which_bin
+
     harness_path = os.path.abspath("build/kg_harness")
     if not os.path.exists(harness_path):
         # Run cmake build automatically
@@ -41,7 +52,8 @@ def run_verification(
     profile_name: str = "quick",
     backend_filter: Optional[str] = None,  # "cpu", "cuda", or None for all
     config_path: str = "kernelguard.yaml",
-    reports_dir: str = "reports"
+    reports_dir: str = "reports",
+    harness_bin_override: Optional[str] = None
 ) -> Tuple[int, Dict[str, Any]]:
     os.makedirs(reports_dir, exist_ok=True)
     cfg: KernelGuardConfig = load_config(config_path)
@@ -52,7 +64,7 @@ def run_verification(
         return 3, {}
 
     profile = cfg.profiles[profile_name]
-    harness_bin = ensure_harness_binary()
+    harness_bin = ensure_harness_binary(harness_bin_override)
 
     toolchain_adapters = {}
     if cfg.toolchains.get("gcc", None) and cfg.toolchains["gcc"].enabled:

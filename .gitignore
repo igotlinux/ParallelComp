@@ -13,6 +13,8 @@ __pycache__/
 .pytest_cache/
 .venv/
 env/
+*.egg-info/
+dist/
 
 # IDE / OS
 .DS_Store

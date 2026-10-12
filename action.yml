@@ -1,0 +1,105 @@
+name: 'KernelGuard Verification Action'
+description: 'Production-quality compiler verification, numerical drift detection, and vectorization regression gatekeeper for C/C++ and CUDA'
+author: 'KernelGuard'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  profile:
+    description: 'Verification profile to run ("quick" or "full")'
+    required: false
+    default: 'quick'
+  backend:
+    description: 'Backend filter: "cpu" (GCC/Clang), "cuda" (NVCC/PTX), or "" for all'
+    required: false
+    default: ''
+  config:
+    description: 'Path to kernelguard.yaml configuration file'
+    required: false
+    default: 'kernelguard.yaml'
+  reports-dir:
+    description: 'Directory for generated reports'
+    required: false
+    default: 'reports'
+  fail-on-regression:
+    description: 'Fail the step if a vectorization or instruction count regression is detected'
+    required: false
+    default: 'true'
+
+outputs:
+  passed-tests:
+    description: 'Number of tests that passed verification'
+    value: ${{ steps.run-kg.outputs.passed }}
+  failed-tests:
+    description: 'Number of tests that failed verification'
+    value: ${{ steps.run-kg.outputs.failed }}
+  skipped-tests:
+    description: 'Number of tests that were skipped'
+    value: ${{ steps.run-kg.outputs.skipped }}
+  report-html:
+    description: 'Path to interactive HTML report'
+    value: '${{ inputs.reports-dir }}/report.html'
+  report-json:
+    description: 'Path to machine-readable JSON report'
+    value: '${{ inputs.reports-dir }}/kernelguard_report.json'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install KernelGuard & Build Harness
+      shell: bash
+      run: |
+        python3 -m pip install --upgrade pip pyyaml
+        if [ -f "${{ github.action_path }}/setup.py" ]; then
+          python3 -m pip install "${{ github.action_path }}"
+          cmake -B "${{ github.action_path }}/build" -G Ninja -S "${{ github.action_path }}" || cmake -B "${{ github.action_path }}/build" -S "${{ github.action_path }}"
+          cmake --build "${{ github.action_path }}/build"
+        else
+          python3 -m pip install .
+          cmake -B build -G Ninja || cmake -B build
+          cmake --build build
+        fi
+
+    - name: Execute KernelGuard
+      id: run-kg
+      shell: bash
+      run: |
+        BACKEND_FLAG=""
+        if [ -n "${{ inputs.backend }}" ]; then
+          BACKEND_FLAG="--backend ${{ inputs.backend }}"
+        fi
+
+        HARNESS_FLAG=""
+        if [ -f "${{ github.action_path }}/build/kg_harness" ]; then
+          HARNESS_FLAG="--harness ${{ github.action_path }}/build/kg_harness"
+        elif [ -f "./build/kg_harness" ]; then
+          HARNESS_FLAG="--harness ./build/kg_harness"
+        fi
+
+        kg run --profile "${{ inputs.profile }}" $BACKEND_FLAG $HARNESS_FLAG --config "${{ inputs.config }}" --reports-dir "${{ inputs.reports-dir }}"
+        EXIT_CODE=$?
+
+        # Parse results for step outputs
+        if [ -f "${{ inputs.reports-dir }}/kernelguard_report.json" ]; then
+          PASSED=$(python3 -c "import json; d=json.load(open('${{ inputs.reports-dir }}/kernelguard_report.json')); print(d.get('passed_tests', 0))")
+          FAILED=$(python3 -c "import json; d=json.load(open('${{ inputs.reports-dir }}/kernelguard_report.json')); print(d.get('failed_tests', 0))")
+          SKIPPED=$(python3 -c "import json; d=json.load(open('${{ inputs.reports-dir }}/kernelguard_report.json')); print(d.get('skipped_tests', 0))")
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+        fi
+
+        exit $EXIT_CODE
+
+    - name: Upload KernelGuard Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernelguard-verification-reports
+        path: ${{ inputs.reports-dir }}/

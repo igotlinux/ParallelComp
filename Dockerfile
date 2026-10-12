@@ -33,5 +33,8 @@ USER kguser
 
 # Build C++ harness and core library
 RUN cmake -B build -G Ninja && cmake --build build
+RUN pip3 install --no-cache-dir --user .
 
-CMD ["./kg", "run", "--profile", "quick"]
+ENV PATH="/home/kguser/.local/bin:${PATH}"
+
+CMD ["kg", "run", "--profile", "quick"]

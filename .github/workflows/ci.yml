@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  cpu-verification:
-    name: CPU Compiler Verification (Matrix)
+  linux-cpu-verification:
+    name: Linux CPU Verification (${{ matrix.compiler }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -37,7 +37,7 @@ jobs:
             sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
             sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
           fi
-          pip install pyyaml
+          pip install pyyaml .
 
       - name: Build C++ Harness & Unit Tests
         run: |
@@ -65,4 +65,90 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kernelguard-reports-${{ matrix.compiler }}
+          path: reports/
+
+  macos-cpu-verification:
+    name: macOS ARM64 Verification (Apple Clang)
+    runs-on: macos-14
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          brew install cmake ninja
+          pip install pyyaml .
+
+      - name: Build C++ Harness & Unit Tests
+        run: |
+          cmake -B build -G Ninja
+          cmake --build build
+
+      - name: Run C++ Unit Tests
+        run: |
+          ctest --test-dir build --output-on-failure
+
+      - name: Run Python Unit Tests
+        run: |
+          python3 -m unittest discover -s tests -v
+
+      - name: Run KernelGuard Verification Matrix
+        run: |
+          ./kg run --profile quick
+
+      - name: Run Seeded Bug Detection Suite
+        run: |
+          ./build/kg_harness --seeded-bugs --profile quick
+
+      - name: Upload Verification Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernelguard-reports-macos-arm64
+          path: reports/
+
+  cuda-ptx-verification:
+    name: CUDA 12 & PTX Compilation Verification
+    runs-on: ubuntu-latest
+    container:
+      image: nvidia/cuda:12.3.1-devel-ubuntu22.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          apt-get update
+          apt-get install -y cmake ninja-build python3 python3-pip git build-essential
+          pip3 install pyyaml .
+
+      - name: Verify NVCC Toolchain
+        run: |
+          nvcc --version
+
+      - name: Build with CUDA Hardware Target
+        run: |
+          cmake -B build -G Ninja
+          cmake --build build
+
+      - name: Run Unit Tests
+        run: |
+          ctest --test-dir build --output-on-failure
+          PYTHONPATH=python python3 -m unittest discover -s tests -v
+
+      - name: Run KernelGuard CUDA Verification Matrix
+        run: |
+          ./kg run --backend cuda --profile quick
+
+      - name: Upload CUDA Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernelguard-reports-cuda
           path: reports/

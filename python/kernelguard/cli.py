@@ -27,6 +27,8 @@ def main():
                             help="Path to configuration file")
     run_parser.add_argument("--reports-dir", default="reports",
                             help="Output directory for generated reports")
+    run_parser.add_argument("--harness", default=None,
+                            help="Path to pre-built kg_harness binary")
 
     # Command: report
     report_parser = subparsers.add_parser("report", help="Display summary of latest verification run")
@@ -56,6 +58,7 @@ def main():
             backend_filter=args.backend,
             config_path=args.config,
             reports_dir=args.reports_dir,
+            harness_bin_override=args.harness,
         )
         sys.exit(exit_code)
 

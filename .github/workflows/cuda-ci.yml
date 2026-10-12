@@ -22,16 +22,21 @@ jobs:
       - name: Install Dependencies
         run: |
           apt-get update
-          apt-get install -y cmake python3 python3-pip git
-          pip3 install pyyaml
+          apt-get install -y cmake ninja-build python3 python3-pip git build-essential
+          pip3 install pyyaml .
 
       - name: Verify NVCC Toolchain
         run: |
           nvcc --version
 
+      - name: Build C++ and CUDA Targets
+        run: |
+          cmake -B build -G Ninja
+          cmake --build build
+
       - name: Run PTX Unit Tests
         run: |
-          PYTHONPATH=python python3 -m unittest tests/test_ptx_parser.py -v
+          PYTHONPATH=python python3 -m unittest discover -s tests -v
 
       - name: Run CUDA PTX Verification Matrix
         run: |

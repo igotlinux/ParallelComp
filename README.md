@@ -1,13 +1,32 @@
 # KernelGuard 🛡️
 ### Production-Quality Compiler Verification & Numerical Correctness Framework
 [![Verification CI](https://github.com/igotlinux/kernal-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/igotlinux/kernal-guard/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/docs-website-brightgreen.svg)](https://igotlinux.github.io/kernal-guard/)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![CUDA 12](https://img.shields.io/badge/CUDA-12.x-green.svg)](https://developer.nvidia.com/cuda-zone)
 
-**KernelGuard** is an automated compiler verification framework designed to validate **numerical correctness**, **compiler optimization behavior (SIMD vectorization)**, and **performance regressions** across CPU (GCC, Clang) and GPU (NVIDIA CUDA, PTX) compilation toolchains.
+**KernelGuard** is a commercial-grade automated compiler verification and regression gatekeeper framework for C/C++ and NVIDIA CUDA/PTX. It gates pull requests in real CI/CD pipelines to guarantee that refactors, compiler updates, and flag changes **never silently break mathematical precision or kill SIMD/GPU vectorization**.
 
-Built as a credible portfolio project for compiler verification engineering, KernelGuard tests that optimization transformations never compromise mathematical integrity or introduce regressions.
+🌐 **Landing Page & Pricing:** [https://igotlinux.github.io/kernal-guard/](https://igotlinux.github.io/kernal-guard/)
+
+---
+
+## 💎 Commercial Plans & Pricing
+
+KernelGuard is dual-licensed: free and open-source for community and academic use, with commercial tiers for production engineering teams. Full details and interactive ROI calculator: [https://igotlinux.github.io/kernal-guard/#pricing](https://igotlinux.github.io/kernal-guard/#pricing).
+
+| Plan | Pricing | Target Audience | Key Inclusions |
+| :--- | :--- | :--- | :--- |
+| **Community** | **$0** / forever | Open-source repos, researchers, students | Double-double oracle, local CLI (`kg`), GCC/Clang matrix, HTML/JSON/JUnit reports |
+| **Pro / Team** | **$99** / seat / mo | ML inference teams, DSP/audio engines, game studios | Automated PR gatekeeper, Delta Debugging minimizer (`ddmin`), Standalone `repro.cpp` generator, Vectorization remark tracking, SARIF GitHub code scanning, Lockfile regression gates |
+| **Enterprise** | **$499** / repo / mo | HPC organizations, GPU cloud providers, defense/finance | Live NVIDIA GPU hardware runner farms, automated PTX assembly assertions, pinned toolchain Docker digests, custom microarchitecture contracts (AVX-512, SVE2), dedicated SLA & compiler consulting |
+
+### Why Teams Pay for KernelGuard
+- **Prevent Multi-Million Dollar GPU Regressions:** A silent vectorization loss or subnormal FTZ rounding bug in an ML kernel wastes hundreds of GPU cluster training hours.
+- **Instant Root Cause with Standalone `repro.cpp`:** Instead of debugging a 50,000-line codebase, KernelGuard's Delta Debugger extracts the failing input array down to 1 minimal case and bundles a standalone 50-line C++ file ready for the LLVM/GCC/NVCC bug tracker.
+- **Deterministic CI Signals:** Unlike flaky benchmark timings that jitter in cloud virtual machines, KernelGuard gates on deterministic contracts: ULP bounds, compiler remarks, disassembly SIMD opcodes, and Callgrind instruction counts.
 
 ---
 
@@ -15,7 +34,7 @@ Built as a credible portfolio project for compiler verification engineering, Ker
 
 ### 1. High-Precision Numerical Oracle (~106-bit Double-Double)
 - Evaluates outputs against an exact reference computed using Knuth's **2Sum** and Dekker's **2Prod** error-free transformations.
-- Provides ~106 bits of significand precision, functioning as an exact oracle for IEEE 754 single-precision (`float32`) without external library overhead.
+- Provides ~106 bits of significand precision, functioning as an exact oracle for IEEE 754 single-precision (`float32`) without external library dependencies.
 - Supports configurable error contracts:
   - `exact`: Bit-exact equality.
   - `ulp(k)`: Bounded Units in the Last Place distance ($k$ ULPs).
@@ -61,107 +80,108 @@ Includes 7 distinct, intentionally faulty CPU kernels and 2 CUDA bug kernels:
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Cross-Platform Support
 
-### Prerequisites
-- C++17 compiler (GCC 12+ or Clang 15+)
-- CMake 3.16+
-- Python 3.10+ (with `pyyaml`)
+KernelGuard is battle-tested across operating systems and microarchitectures:
 
-### 1. Build the Harness
+| Platform | Microarchitecture | Compilers Supported | Verification Mode |
+| :--- | :--- | :--- | :--- |
+| **Linux (Ubuntu, Debian, RHEL, Arch)** | x86_64 (AVX2, AVX-512) | GCC 9–14, Clang 12–19 | Native execution, Callgrind, Valgrind |
+| **macOS (Sonoma, Sequoia)** | Apple Silicon (ARM64 NEON) | Apple Clang, Homebrew GCC | Native NEON execution, remark tracking |
+| **Linux + NVIDIA CUDA** | NVIDIA GPU (Ampere, Hopper, Blackwell) | NVCC 11.x, 12.x, Clang-CUDA | Real GPU device execution + offline PTX inspection |
+
+---
+
+## 🔄 Real CI/CD Pipeline Integration
+
+### 1. Reusable GitHub Action (One-Line Setup)
+Add KernelGuard to any GitHub repository in `.github/workflows/kernelguard.yml`:
+
+```yaml
+name: KernelGuard Compiler Gatekeeper
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run KernelGuard Verification
+        uses: igotlinux/kernal-guard@v1
+        with:
+          profile: 'quick'          # 'quick' for PRs, 'full' for nightlies
+          config: 'kernelguard.yaml'
+          fail-on-regression: 'true'
+
+      # Upload SARIF results to GitHub Security tab (Pro/Enterprise)
+      - name: Upload SARIF Security Scan
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'reports/kernelguard_results.sarif'
+```
+
+### 2. Docker / GitLab CI / Jenkins
+KernelGuard ships with a reproducible Linux container image:
+
 ```bash
+# Pull or build container
+docker build -t kernelguard .
+
+# Run verification in your CI runner
+docker run --rm -v $(pwd):/workspace kernelguard kg run --profile quick
+```
+
+---
+
+## 💻 Quick Start & Local Usage
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/igotlinux/kernal-guard.git
+cd kernal-guard
+
+# Install Python package
+pip install .
+
+# Build C++ harness
 cmake -B build
 cmake --build build
 ```
 
-### 2. Run Verification Tests
+### Command-Line Interface (`kg`)
+
 ```bash
 # Run quick verification matrix (GCC + Clang)
-./kg run --profile quick
+kg run --profile quick
 
-# Run full nightly matrix
-./kg run --profile full
+# Run full nightly matrix with all boundary distributions
+kg run --profile full
 
 # Run CPU-only verification
-./kg run --backend cpu
+kg run --backend cpu
 
-# Run CUDA/PTX backend (gracefully skips if no GPU/nvcc)
-./kg run --backend cuda
-```
+# Run CUDA/PTX backend (runs live kernels on GPU or PTX parser offline)
+kg run --backend cuda
 
-### 3. Run the Seeded Bug Suite
-```bash
+# Inspect seeded bug detection suite
 ./build/kg_harness --seeded-bugs --profile quick
-```
 
-### 4. View Generated Reports
-```bash
-./kg report
-# Or open the rich interactive HTML report:
+# View latest summary report
+kg report
+
+# Update baseline lockfile for pull request gating
+kg baseline update
+
+# Open interactive HTML dashboard
 open reports/report.html
-```
-
----
-
-## 📊 Verification Matrix & Example Output
-
-```
-======================================================================
-Starting KernelGuard Verification Matrix...
-Profile: quick | Target Backends: ['gcc', 'clang', 'cuda']
-Host: darwin (arm64) | CUDA Present: False | GPU Hardware: False
-======================================================================
-  [PASS] vec_add (gcc -O0 strict)       - Verified contract (SIMD: False)
-  [PASS] vec_add (gcc -O3 strict)       - Verified contract (SIMD: True)
-  [PASS] vec_add (clang -O2 strict)     - Verified contract (SIMD: True)
-  [SKIPPED] vec_add (cuda)              - nvcc compiler not found
-  [PASS] saxpy (gcc -O3 fast-math)      - Verified contract (SIMD: True)
-  [PASS] saxpy (clang -O3 strict)       - Verified contract (SIMD: True)
-  [SKIPPED] saxpy (cuda)                - nvcc compiler not found
-  [PASS] dot_product (gcc -O3 strict)   - Verified contract (SIMD: True)
-  [PASS] dot_product (clang -O3 strict) - Verified contract (SIMD: True)
-  [SKIPPED] dot_product (cuda)          - nvcc compiler not found
-======================================================================
-Verification Summary: 36 PASSED, 0 FAILED, 3 SKIPPED out of 39 configurations.
-```
-
----
-
-## 📁 Repository Structure
-
-```
-kernal-guard/
-├── CMakeLists.txt              # C++ build definition
-├── Dockerfile                  # Reproducible test container
-├── kernelguard.yaml            # Toolchain, kernel, and matrix configuration
-├── kernelguard_lock.json       # Baseline regression lockfile
-├── kg                          # CLI entry point wrapper
-├── include/kernelguard/
-│   ├── double_double.h         # ~106-bit DoubleDouble arithmetic & ULP logic
-│   ├── memory_guard.h          # PROT_NONE guard pages and canary buffers
-│   ├── isolation.h             # Fork-per-case process isolation & signal handling
-│   ├── classifier.h            # Failure classifier and contract evaluation
-│   ├── test_case.h             # Test distributions (subnormal, cancellation, etc.)
-│   └── harness.h               # Public C++ harness API & kernel registry
-├── src/
-│   ├── harness/main.cpp        # Standalone harness binary
-│   ├── kernels/cpu/            # Vector addition, SAXPY, dot product
-│   ├── kernels/cuda/           # CUDA vec_add, saxpy, dot_product
-│   ├── kernels/seeded_bugs/    # Faulty test kernels for detection verification
-│   └── unit_tests/             # C++ unit tests
-├── python/kernelguard/
-│   ├── cli.py                  # CLI command implementation
-│   ├── config.py               # YAML configuration loader & validator
-│   ├── host.py                 # CPU SIMD and GPU capability detector
-│   ├── runner.py               # Matrix compilation & execution engine
-│   ├── toolchains/             # GCC, Clang, and NVCC adapters
-│   ├── analysis/               # Remarks parser, disassembler, PTX parser
-│   ├── minimization/           # Delta debugging (ddmin) & reproducer generator
-│   ├── baseline.py             # Lockfile manager & regression gatekeeper
-│   └── reporting/              # HTML, JSON, JUnit XML, SARIF, and Markdown reporters
-├── tests/                      # Python unit test suite
-├── docs/                       # Architecture, engineering decisions, and guides
-└── reports/                    # Generated test reports
 ```
 
 ---
@@ -182,19 +202,49 @@ kernal-guard/
 
 ---
 
-## 🛠️ CLI Interface (`kg`)
+## 📁 Repository Structure
 
-| Command | Description |
-| :--- | :--- |
-| `kg run --profile quick` | Execute quick verification profile |
-| `kg run --profile full` | Execute comprehensive nightly matrix |
-| `kg run --backend cpu` | Limit execution to CPU toolchains (GCC, Clang) |
-| `kg run --backend cuda` | Limit execution to CUDA/PTX backend |
-| `kg report` | Display summary of latest verification run |
-| `kg repro <failure-id>` | Inspect standalone reproducer bundle |
-| `kg baseline update` | Update `kernelguard_lock.json` with baseline metrics |
+```
+kernal-guard/
+├── .github/workflows/          # Production CI/CD pipelines
+│   ├── ci.yml                  # Cross-platform matrix (Linux GCC/Clang, macOS ARM64, CUDA)
+│   ├── cuda-ci.yml             # Dedicated CUDA/PTX container test
+│   └── pages.yml               # Automated GitHub Pages marketing deployment
+├── action.yml                  # Reusable composite GitHub Action for downstream repos
+├── CMakeLists.txt              # C++ build & installation rules
+├── Dockerfile                  # Production Ubuntu 22.04 container image
+├── docs/                       # Commercial landing page & engineering decision logs
+│   ├── index.html              # Marketing website with pricing, calculator & demo
+│   └── decisions.md            # Architectural decision records
+├── kernelguard.yaml            # Toolchain, kernel, and matrix configuration
+├── kernelguard_lock.json       # Baseline regression lockfile
+├── kg                          # Root CLI executable wrapper
+├── include/kernelguard/        # Core C++ headers
+│   ├── double_double.h         # ~106-bit Knuth 2Sum & Dekker 2Prod arithmetic oracle
+│   ├── memory_guard.h          # PROT_NONE guard pages & 64-byte canaries
+│   ├── isolation.h             # Fork-per-case process isolation & signal handling
+│   ├── classifier.h            # Contract evaluation & failure diagnostics
+│   ├── test_case.h             # 20 vector-width boundaries × 6 distributions
+│   └── harness.h               # Kernel registry & harness API
+├── src/                        # Kernel implementations & test harness
+│   ├── harness/main.cpp        # Standalone CPU harness binary
+│   ├── kernels/cpu/            # Clean kernels (vec_add, saxpy, dot_product)
+│   ├── kernels/cuda/           # CUDA kernels & cuda_harness.cu
+│   ├── kernels/seeded_bugs/    # 7 CPU bug kernels + 2 CUDA bug kernels
+│   └── unit_tests/             # C++ unit tests (double-double, guard pages)
+├── python/kernelguard/         # Python verification & analysis engine
+│   ├── cli.py                  # CLI argument parser & subcommands
+│   ├── runner.py               # Matrix compilation & execution engine
+│   ├── toolchains/             # GCC, Clang, and NVCC adapters
+│   ├── analysis/               # Remarks parser, disassembler, PTX parser, icount
+│   ├── minimization/           # Delta debugging (ddmin) & repro.cpp generator
+│   ├── baseline.py             # Lockfile manager & regression gatekeeper
+│   └── reporting/              # HTML, JSON, JUnit XML, SARIF, Summary reporters
+└── tests/                      # Python unit tests (15 test suites)
+```
 
 ---
 
 ## 📄 License
-This project is licensed under the MIT License.
+Released under the [Apache-2.0 License](LICENSE).
+Copyright © 2026 KernelGuard Contributors. Commercial licenses available at [sales@kernelguard.dev](mailto:sales@kernelguard.dev).

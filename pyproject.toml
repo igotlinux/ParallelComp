@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kernelguard"
+version = "1.0.0"
+description = "Production-Quality Compiler Verification and Numerical Correctness Framework"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "KernelGuard Team", email = "contact@kernelguard.dev" }
+]
+keywords = ["compiler", "verification", "cuda", "ptx", "simd", "vectorization", "numerics", "testing"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+kg = "kernelguard.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/igotlinux/kernal-guard"
+Documentation = "https://igotlinux.github.io/kernal-guard/"
+Repository = "https://github.com/igotlinux/kernal-guard.git"
+"Bug Tracker" = "https://github.com/igotlinux/kernal-guard/issues"
