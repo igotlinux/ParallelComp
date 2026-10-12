@@ -40,13 +40,26 @@ def ensure_harness_binary(explicit_path: Optional[str] = None) -> str:
     if which_bin:
         return which_bin
 
-    harness_path = os.path.abspath("build/kg_harness")
-    if not os.path.exists(harness_path):
-        # Run cmake build automatically
+    # Check local repo build directory
+    local_path = os.path.abspath("build/kg_harness")
+    if os.path.exists(local_path):
+        return local_path
+
+    # Check kernelguard source/installation directory
+    pkg_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    candidate = os.path.join(pkg_dir, "build", "kg_harness")
+    if os.path.exists(candidate):
+        return candidate
+
+    # Run cmake build automatically if CMakeLists.txt is present
+    if os.path.exists("CMakeLists.txt"):
         os.makedirs("build", exist_ok=True)
         subprocess.run(["cmake", "-B", "build", "."], check=True, stdout=subprocess.DEVNULL)
         subprocess.run(["cmake", "--build", "build"], check=True, stdout=subprocess.DEVNULL)
-    return harness_path
+        if os.path.exists(local_path):
+            return local_path
+
+    return local_path
 
 
 def run_verification(
