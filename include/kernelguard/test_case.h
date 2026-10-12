@@ -134,13 +134,17 @@ inline std::vector<float> generate_test_data(const TestCaseConfig& cfg, int stre
     return data;
 }
 
-// Standard test suite generator
+// Standard full matrix test suite generator:
+// 20 boundary sizes × 4 alignments × 6 distributions hitting tails, cancellation, and denormals
 inline std::vector<TestCaseConfig> create_standard_test_suite() {
     std::vector<TestCaseConfig> suite;
 
-    // Boundary sizes
-    const std::vector<size_t> sizes = {0, 1, 3, 7, 8, 15, 16, 31, 32, 65, 128, 1024};
-    const std::vector<size_t> misalignments = {0, 4}; // Aligned and 4-byte misaligned
+    // 20 vector-width boundary sizes hitting 4/8/16-wide SIMD lanes (SSE, AVX, AVX-512, NEON)
+    const std::vector<size_t> sizes = {
+        0, 1, 2, 3, 7, 8, 9, 15, 16, 17, 31, 32, 33, 63, 64, 65, 1000, 1023, 4096, 1000000
+    };
+    // 4 alignment offsets
+    const std::vector<size_t> misalignments = {0, 1, 2, 4};
 
     for (size_t sz : sizes) {
         for (size_t misalign : misalignments) {
@@ -148,13 +152,20 @@ inline std::vector<TestCaseConfig> create_standard_test_suite() {
         }
     }
 
-    // Edge distributions for representative sizes
-    const std::vector<size_t> edge_sizes = {8, 33, 256};
+    // Edge distributions across boundary sizes
+    const std::vector<size_t> edge_sizes = {1, 7, 8, 15, 16, 31, 32, 33, 64, 1000};
+    const DistributionType edge_dists[] = {
+        DistributionType::SUBNORMAL,
+        DistributionType::CANCELLATION,
+        DistributionType::SPECIAL_VALUES,
+        DistributionType::POWERS_OF_TWO,
+        DistributionType::WIDE_DYNAMIC_RANGE
+    };
+
     for (size_t sz : edge_sizes) {
-        suite.emplace_back(sz, DistributionType::SUBNORMAL, 0, 101);
-        suite.emplace_back(sz, DistributionType::CANCELLATION, 0, 202);
-        suite.emplace_back(sz, DistributionType::SPECIAL_VALUES, 0, 303);
-        suite.emplace_back(sz, DistributionType::WIDE_DYNAMIC_RANGE, 0, 404);
+        for (auto dist : edge_dists) {
+            suite.emplace_back(sz, dist, 0, 101);
+        }
     }
 
     return suite;
