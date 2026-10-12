@@ -32,6 +32,8 @@ def main():
                             help="Path to pre-built kg_harness binary")
     run_parser.add_argument("--license-key", default=None,
                             help="Commercial License Key (or set KERNELGUARD_TOKEN env var)")
+    run_parser.add_argument("--strict-license", action="store_true",
+                            help="Fail CI runner if commercial license is invalid or revoked")
 
     # Command: report
     report_parser = subparsers.add_parser("report", help="Display summary of latest verification run")
@@ -82,6 +84,7 @@ def main():
             reports_dir=args.reports_dir,
             harness_bin_override=args.harness,
             license_key=args.license_key,
+            strict_license=args.strict_license,
         )
         sys.exit(exit_code)
 
@@ -108,7 +111,7 @@ def main():
 
         elif args.license_action == "verify":
             token = args.token or os.environ.get("KERNELGUARD_TOKEN") or os.environ.get("KG_LICENSE_KEY")
-            lic = verify_license_token(token)
+            lic = get_active_license(token)
             print("=" * 60)
             print("KernelGuard License Verification")
             print("=" * 60)

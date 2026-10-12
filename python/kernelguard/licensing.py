@@ -207,10 +207,108 @@ def verify_license_token(
         )
 
 
+def verify_license_online(
+    token_str: Optional[str],
+    api_url: Optional[str] = None,
+    timeout: float = 3.0,
+    signing_key: str = DEFAULT_MASTER_KEY
+) -> LicenseInfo:
+    """
+    Validates a commercial license token online against the KernelGuard Cloud SaaS server.
+    Ensures real-time revocation checks (e.g., cancelled subscription, chargeback, or admin ban).
+    Falls back gracefully to offline cryptographic check if the cloud is unreachable,
+    unless KG_ENFORCE_ONLINE=1 is specified.
+    """
+    local_info = verify_license_token(token_str, signing_key=signing_key)
+    if not local_info.is_valid:
+        return local_info
+
+    server_url = api_url or os.environ.get("KG_API_URL")
+    if not server_url:
+        return local_info
+
+    # Query cloud control plane
+    endpoint = f"{server_url.rstrip('/')}/v1/auth/verify"
+    import urllib.request
+    import urllib.error
+
+    payload = json.dumps({"token": token_str, "client_version": "1.0.0"}).encode("utf-8")
+    req = urllib.request.Request(
+        endpoint,
+        data=payload,
+        headers={"Content-Type": "application/json", "User-Agent": "KernelGuard-CLI/1.0.0"},
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data.get("valid"):
+                return local_info
+            else:
+                return LicenseInfo(
+                    is_valid=False,
+                    plan=local_info.plan,
+                    customer=local_info.customer,
+                    email=local_info.email,
+                    seats=local_info.seats,
+                    expires_at_timestamp=local_info.expires_at_timestamp,
+                    expires_at_str=local_info.expires_at_str,
+                    is_expired=local_info.is_expired,
+                    features=local_info.features,
+                    error_message=data.get("error", "Access denied by cloud server.")
+                )
+    except urllib.error.HTTPError as e:
+        # Server explicitly rejected token (e.g. 403 Forbidden because it is revoked)
+        error_detail = "License rejected by cloud server."
+        try:
+            body = json.loads(e.read().decode("utf-8"))
+            if isinstance(body.get("detail"), dict):
+                error_detail = body["detail"].get("error", error_detail)
+            elif isinstance(body.get("detail"), str):
+                error_detail = body["detail"]
+        except Exception:
+            pass
+
+        return LicenseInfo(
+            is_valid=False,
+            plan=local_info.plan,
+            customer=local_info.customer,
+            email=local_info.email,
+            seats=local_info.seats,
+            expires_at_timestamp=local_info.expires_at_timestamp,
+            expires_at_str=local_info.expires_at_str,
+            is_expired=local_info.is_expired,
+            features=local_info.features,
+            error_message=f"Cloud verification failed ({e.code}): {error_detail}"
+        )
+    except Exception as e:
+        enforce = os.environ.get("KG_ENFORCE_ONLINE", "0").lower() in ("1", "true", "yes")
+        if enforce:
+            return LicenseInfo(
+                is_valid=False,
+                plan=local_info.plan,
+                customer=local_info.customer,
+                email=local_info.email,
+                seats=local_info.seats,
+                expires_at_timestamp=local_info.expires_at_timestamp,
+                expires_at_str=local_info.expires_at_str,
+                is_expired=local_info.is_expired,
+                features=local_info.features,
+                error_message=f"Cloud server unreachable and online enforcement enabled: {str(e)}"
+            )
+        # Network unreachable/timeout: fallback to valid cryptographic token
+        return local_info
+
+
 def get_active_license(cli_license_flag: Optional[str] = None) -> LicenseInfo:
     """
     Resolves active license from CLI argument or environment variables
     (KERNELGUARD_TOKEN, KG_LICENSE_KEY).
+    If KG_API_URL is configured, performs online verification with real-time revocation checks.
     """
     token = cli_license_flag or os.environ.get("KERNELGUARD_TOKEN") or os.environ.get("KG_LICENSE_KEY")
+    if os.environ.get("KG_API_URL"):
+        return verify_license_online(token)
     return verify_license_token(token)
+

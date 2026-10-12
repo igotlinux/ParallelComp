@@ -2,7 +2,12 @@
 Unit tests for KernelGuard Commercial Licensing & Token Management Engine
 """
 
+import os
+import sys
 import unittest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python")))
+
 from kernelguard.licensing import (
     generate_license_token,
     verify_license_token,

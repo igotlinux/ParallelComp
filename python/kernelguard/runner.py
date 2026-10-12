@@ -55,12 +55,15 @@ def run_verification(
     config_path: str = "kernelguard.yaml",
     reports_dir: str = "reports",
     harness_bin_override: Optional[str] = None,
-    license_key: Optional[str] = None
+    license_key: Optional[str] = None,
+    strict_license: bool = False
 ) -> Tuple[int, Dict[str, Any]]:
     os.makedirs(reports_dir, exist_ok=True)
     cfg: KernelGuardConfig = load_config(config_path)
     host: HostCapabilities = detect_host()
     lic: LicenseInfo = get_active_license(license_key)
+
+    has_explicit_token = bool(license_key or os.environ.get("KERNELGUARD_TOKEN") or os.environ.get("KG_LICENSE_KEY"))
 
     if profile_name not in cfg.profiles:
         print(f"Error: Profile '{profile_name}' not defined in config.", file=sys.stderr)
@@ -92,7 +95,13 @@ def run_verification(
     if lic.is_valid:
         print(f"License: {lic.plan.upper()} (Active: {lic.customer} | {lic.seats} Seats | Expires: {lic.expires_at_str})")
     elif lic.error_message and "Community" not in lic.error_message:
-        print(f"License: INVALID ({lic.error_message}) - Falling back to Community Edition")
+        print(f"License: INVALID ({lic.error_message})")
+        is_strict = strict_license or (os.environ.get("KG_STRICT_LICENSE", "0").lower() in ("1", "true", "yes"))
+        is_blocked = "revoked" in str(lic.error_message).lower() or "403" in str(lic.error_message) or "tampered" in str(lic.error_message).lower()
+        if (is_strict or is_blocked) and has_explicit_token:
+            print(f"[LICENSE ERROR] Commercial verification blocked: {lic.error_message}", file=sys.stderr)
+            return 1, {}
+        print(f"License: Falling back to Community Edition")
     else:
         print(f"License: Community Edition (Free) | Upgrade to Pro: https://igotlinux.github.io/kernal-guard/")
     print("=" * 70)

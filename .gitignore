@@ -30,3 +30,9 @@ reports/*.html
 reports/*.md
 repro_bundles/*
 !repro_bundles/.gitkeep
+
+# Databases & local state
+*.db
+*.sqlite
+*.sqlite3
+
