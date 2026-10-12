@@ -1,0 +1,68 @@
+name: KernelGuard Verification CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  cpu-verification:
+    name: CPU Compiler Verification (Matrix)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc-13, clang-18]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Toolchain & Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build valgrind libmpfr-dev
+          if [ "${{ matrix.compiler }}" = "gcc-13" ]; then
+            sudo apt-get install -y gcc-13 g++-13
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
+          elif [ "${{ matrix.compiler }}" = "clang-18" ]; then
+            sudo apt-get install -y clang-18 clang++-18
+            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
+          fi
+          pip install pyyaml
+
+      - name: Build C++ Harness & Unit Tests
+        run: |
+          cmake -B build -G Ninja
+          cmake --build build
+
+      - name: Run C++ Unit Tests
+        run: |
+          ctest --test-dir build --output-on-failure
+
+      - name: Run Python Unit Tests
+        run: |
+          python3 -m unittest discover -s tests -v
+
+      - name: Run KernelGuard Verification Matrix
+        run: |
+          ./kg run --profile quick
+
+      - name: Run Seeded Bug Detection Suite
+        run: |
+          ./build/kg_harness --seeded-bugs --profile quick
+
+      - name: Upload Verification Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernelguard-reports-${{ matrix.compiler }}
+          path: reports/

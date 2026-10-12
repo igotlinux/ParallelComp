@@ -1,0 +1,318 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-12 14:21:07",
+  "entries": {
+    "vec_add:gcc:-O0:strict": {
+      "name": "vec_add",
+      "toolchain": "gcc",
+      "opt_level": "-O0",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 553
+    },
+    "vec_add:gcc:-O0:fast-math": {
+      "name": "vec_add",
+      "toolchain": "gcc",
+      "opt_level": "-O0",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 553
+    },
+    "vec_add:gcc:-O2:strict": {
+      "name": "vec_add",
+      "toolchain": "gcc",
+      "opt_level": "-O2",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 761
+    },
+    "vec_add:gcc:-O2:fast-math": {
+      "name": "vec_add",
+      "toolchain": "gcc",
+      "opt_level": "-O2",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 761
+    },
+    "vec_add:gcc:-O3:strict": {
+      "name": "vec_add",
+      "toolchain": "gcc",
+      "opt_level": "-O3",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 938
+    },
+    "vec_add:gcc:-O3:fast-math": {
+      "name": "vec_add",
+      "toolchain": "gcc",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 938
+    },
+    "vec_add:clang:-O0:strict": {
+      "name": "vec_add",
+      "toolchain": "clang",
+      "opt_level": "-O0",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 367
+    },
+    "vec_add:clang:-O0:fast-math": {
+      "name": "vec_add",
+      "toolchain": "clang",
+      "opt_level": "-O0",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 367
+    },
+    "vec_add:clang:-O2:strict": {
+      "name": "vec_add",
+      "toolchain": "clang",
+      "opt_level": "-O2",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 507
+    },
+    "vec_add:clang:-O2:fast-math": {
+      "name": "vec_add",
+      "toolchain": "clang",
+      "opt_level": "-O2",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 507
+    },
+    "vec_add:clang:-O3:strict": {
+      "name": "vec_add",
+      "toolchain": "clang",
+      "opt_level": "-O3",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 516
+    },
+    "vec_add:clang:-O3:fast-math": {
+      "name": "vec_add",
+      "toolchain": "clang",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 516
+    },
+    "vec_add:cuda:-O3:fast-math": {
+      "name": "vec_add",
+      "toolchain": "cuda",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": null
+    },
+    "saxpy:gcc:-O0:strict": {
+      "name": "saxpy",
+      "toolchain": "gcc",
+      "opt_level": "-O0",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 577
+    },
+    "saxpy:gcc:-O0:fast-math": {
+      "name": "saxpy",
+      "toolchain": "gcc",
+      "opt_level": "-O0",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 577
+    },
+    "saxpy:gcc:-O2:strict": {
+      "name": "saxpy",
+      "toolchain": "gcc",
+      "opt_level": "-O2",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 780
+    },
+    "saxpy:gcc:-O2:fast-math": {
+      "name": "saxpy",
+      "toolchain": "gcc",
+      "opt_level": "-O2",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 774
+    },
+    "saxpy:gcc:-O3:strict": {
+      "name": "saxpy",
+      "toolchain": "gcc",
+      "opt_level": "-O3",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 952
+    },
+    "saxpy:gcc:-O3:fast-math": {
+      "name": "saxpy",
+      "toolchain": "gcc",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 945
+    },
+    "saxpy:clang:-O0:strict": {
+      "name": "saxpy",
+      "toolchain": "clang",
+      "opt_level": "-O0",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 402
+    },
+    "saxpy:clang:-O0:fast-math": {
+      "name": "saxpy",
+      "toolchain": "clang",
+      "opt_level": "-O0",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 402
+    },
+    "saxpy:clang:-O2:strict": {
+      "name": "saxpy",
+      "toolchain": "clang",
+      "opt_level": "-O2",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 522
+    },
+    "saxpy:clang:-O2:fast-math": {
+      "name": "saxpy",
+      "toolchain": "clang",
+      "opt_level": "-O2",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 514
+    },
+    "saxpy:clang:-O3:strict": {
+      "name": "saxpy",
+      "toolchain": "clang",
+      "opt_level": "-O3",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 528
+    },
+    "saxpy:clang:-O3:fast-math": {
+      "name": "saxpy",
+      "toolchain": "clang",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 515
+    },
+    "saxpy:cuda:-O3:fast-math": {
+      "name": "saxpy",
+      "toolchain": "cuda",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": null
+    },
+    "dot_product:gcc:-O0:strict": {
+      "name": "dot_product",
+      "toolchain": "gcc",
+      "opt_level": "-O0",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 6
+    },
+    "dot_product:gcc:-O0:fast-math": {
+      "name": "dot_product",
+      "toolchain": "gcc",
+      "opt_level": "-O0",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 6
+    },
+    "dot_product:gcc:-O2:strict": {
+      "name": "dot_product",
+      "toolchain": "gcc",
+      "opt_level": "-O2",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 1
+    },
+    "dot_product:gcc:-O2:fast-math": {
+      "name": "dot_product",
+      "toolchain": "gcc",
+      "opt_level": "-O2",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 1
+    },
+    "dot_product:gcc:-O3:strict": {
+      "name": "dot_product",
+      "toolchain": "gcc",
+      "opt_level": "-O3",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 1
+    },
+    "dot_product:gcc:-O3:fast-math": {
+      "name": "dot_product",
+      "toolchain": "gcc",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 1
+    },
+    "dot_product:clang:-O0:strict": {
+      "name": "dot_product",
+      "toolchain": "clang",
+      "opt_level": "-O0",
+      "fp_mode": "strict",
+      "vectorized": false,
+      "instruction_count": 1
+    },
+    "dot_product:clang:-O0:fast-math": {
+      "name": "dot_product",
+      "toolchain": "clang",
+      "opt_level": "-O0",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": 1
+    },
+    "dot_product:clang:-O2:strict": {
+      "name": "dot_product",
+      "toolchain": "clang",
+      "opt_level": "-O2",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 1
+    },
+    "dot_product:clang:-O2:fast-math": {
+      "name": "dot_product",
+      "toolchain": "clang",
+      "opt_level": "-O2",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 1
+    },
+    "dot_product:clang:-O3:strict": {
+      "name": "dot_product",
+      "toolchain": "clang",
+      "opt_level": "-O3",
+      "fp_mode": "strict",
+      "vectorized": true,
+      "instruction_count": 1
+    },
+    "dot_product:clang:-O3:fast-math": {
+      "name": "dot_product",
+      "toolchain": "clang",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": true,
+      "instruction_count": 1
+    },
+    "dot_product:cuda:-O3:fast-math": {
+      "name": "dot_product",
+      "toolchain": "cuda",
+      "opt_level": "-O3",
+      "fp_mode": "fast-math",
+      "vectorized": false,
+      "instruction_count": null
+    }
+  }
+}

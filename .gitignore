@@ -1,2 +1,30 @@
-part2/*.bin
-part2/big_sample_10GB.bin
+# Build and artifacts
+build/
+*.o
+*.a
+*.dylib
+*.so
+bin/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+env/
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Reports and temporary repro bundles
+# (Keep reports directory tracked via .gitkeep if desired)
+reports/*.json
+reports/*.xml
+reports/*.sarif
+reports/*.html
+reports/*.md
+repro_bundles/*
+!repro_bundles/.gitkeep

@@ -1,0 +1,90 @@
+# KernelGuard Verification Configuration
+version: 1
+
+profiles:
+  quick:
+    description: "Fast smoke profile for interactive development and pre-commit checks"
+    opt_levels: ["-O0", "-O2", "-O3"]
+    fp_modes: ["strict", "fast-math"]
+    sanitizers: [null]
+    test_cases: "quick"
+  full:
+    description: "Comprehensive nightly profile covering full compiler matrix and sanitizers"
+    opt_levels: ["-O0", "-O1", "-O2", "-O3", "-Ofast"]
+    fp_modes: ["strict", "fast-math", "contract-fast"]
+    sanitizers: [null, "address", "undefined"]
+    test_cases: "full"
+
+toolchains:
+  gcc:
+    enabled: true
+    binary_c: "gcc"
+    binary_cxx: "g++"
+    flags:
+      strict: ["-fno-fast-math", "-fno-associative-math", "-ffp-contract=off"]
+      fast-math: ["-ffast-math"]
+      contract-fast: ["-ffp-contract=fast"]
+    vector_remarks_flag: "-fopt-info-vec-optimized"
+    vector_missed_flag: "-fopt-info-vec-missed"
+
+  clang:
+    enabled: true
+    binary_c: "clang"
+    binary_cxx: "clang++"
+    flags:
+      strict: ["-fno-fast-math", "-ffp-contract=off"]
+      fast-math: ["-ffast-math"]
+      contract-fast: ["-ffp-contract=fast"]
+    vector_remarks_flag: "-Rpass=loop-vectorize"
+    vector_missed_flag: "-Rpass-missed=loop-vectorize"
+
+  cuda:
+    enabled: true
+    compiler: "nvcc"
+    target_arch: "sm_75"
+    ptx_flags: ["-ptx", "-O3", "--use_fast_math"]
+
+kernels:
+  vec_add:
+    type: "vec_add"
+    source: "src/kernels/cpu/vec_add.cpp"
+    cuda_source: "src/kernels/cuda/vec_add.cu"
+    contract:
+      kind: "exact"
+    expected_vectorization:
+      at_opt_levels: ["-O2", "-O3", "-Ofast"]
+      isa: "native"
+    ptx_assertions:
+      expected_instructions: ["add.f32"]
+
+  saxpy:
+    type: "saxpy"
+    source: "src/kernels/cpu/saxpy.cpp"
+    cuda_source: "src/kernels/cuda/saxpy.cu"
+    contract:
+      kind: "ulp"
+      max_ulp: 1
+    expected_vectorization:
+      at_opt_levels: ["-O2", "-O3", "-Ofast"]
+      isa: "native"
+    ptx_assertions:
+      expected_instructions: ["fma.rn.f32"]
+
+  dot_product:
+    type: "dot_product"
+    source: "src/kernels/cpu/dot_product.cpp"
+    cuda_source: "src/kernels/cuda/dot_product.cu"
+    contract:
+      kind: "bound"
+      max_rel_bound: 1.0e-4
+      max_abs_bound: 1.0e-5
+    expected_vectorization:
+      at_opt_levels: ["-O3", "-Ofast"]
+      isa: "native"
+    ptx_assertions:
+      expected_instructions: ["mul.f32", "red.relaxed"]
+
+regression_gates:
+  vectorization_regression_fatal: true
+  max_instruction_count_increase_pct: 10.0
+  wall_clock_is_advisory: true

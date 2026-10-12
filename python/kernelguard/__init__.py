@@ -1,0 +1,5 @@
+"""
+KernelGuard: Compiler Verification and Numerical Correctness Framework
+"""
+
+__version__ = "1.0.0"

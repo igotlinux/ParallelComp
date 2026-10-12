@@ -1,0 +1,45 @@
+name: KernelGuard CUDA & PTX Verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/kernels/cuda/**'
+      - 'python/kernelguard/toolchains/cuda.py'
+      - 'python/kernelguard/analysis/ptx_parser.py'
+
+jobs:
+  cuda-ptx-verification:
+    name: CUDA to PTX Inspection
+    runs-on: ubuntu-latest
+    container:
+      image: nvidia/cuda:12.3.1-devel-ubuntu22.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          apt-get update
+          apt-get install -y cmake python3 python3-pip git
+          pip3 install pyyaml
+
+      - name: Verify NVCC Toolchain
+        run: |
+          nvcc --version
+
+      - name: Run PTX Unit Tests
+        run: |
+          PYTHONPATH=python python3 -m unittest tests/test_ptx_parser.py -v
+
+      - name: Run CUDA PTX Verification Matrix
+        run: |
+          ./kg run --backend cuda --profile quick
+
+      - name: Upload PTX Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cuda-ptx-reports
+          path: reports/
