@@ -23,6 +23,7 @@ from .reporting.json_reporter import write_json_report
 from .reporting.junit_reporter import write_junit_report
 from .reporting.sarif_reporter import write_sarif_report
 from .reporting.html_reporter import generate_html_report
+from .licensing import get_active_license, LicenseInfo
 from .reporting.summary_reporter import generate_summary_markdown
 from .baseline import load_baseline, check_regressions
 
@@ -53,11 +54,13 @@ def run_verification(
     backend_filter: Optional[str] = None,  # "cpu", "cuda", or None for all
     config_path: str = "kernelguard.yaml",
     reports_dir: str = "reports",
-    harness_bin_override: Optional[str] = None
+    harness_bin_override: Optional[str] = None,
+    license_key: Optional[str] = None
 ) -> Tuple[int, Dict[str, Any]]:
     os.makedirs(reports_dir, exist_ok=True)
     cfg: KernelGuardConfig = load_config(config_path)
     host: HostCapabilities = detect_host()
+    lic: LicenseInfo = get_active_license(license_key)
 
     if profile_name not in cfg.profiles:
         print(f"Error: Profile '{profile_name}' not defined in config.", file=sys.stderr)
@@ -86,6 +89,12 @@ def run_verification(
     print(f"Starting KernelGuard Verification Matrix...")
     print(f"Profile: {profile_name} | Target Backends: {list(toolchain_adapters.keys())}")
     print(f"Host: {host.os_name} ({host.machine}) | CUDA Present: {host.has_cuda} | GPU Hardware: {host.has_gpu}")
+    if lic.is_valid:
+        print(f"License: {lic.plan.upper()} (Active: {lic.customer} | {lic.seats} Seats | Expires: {lic.expires_at_str})")
+    elif lic.error_message and "Community" not in lic.error_message:
+        print(f"License: INVALID ({lic.error_message}) - Falling back to Community Edition")
+    else:
+        print(f"License: Community Edition (Free) | Upgrade to Pro: https://igotlinux.github.io/kernal-guard/")
     print("=" * 70)
 
     results = []
