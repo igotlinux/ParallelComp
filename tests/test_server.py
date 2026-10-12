@@ -4,12 +4,18 @@ Integration tests for KernelGuard Cloud SaaS Control Plane & Licensing API
 
 import os
 import unittest
-from fastapi.testclient import TestClient
 
-from server.main import app, ADMIN_API_KEY
+try:
+    from fastapi.testclient import TestClient
+    from server.main import app, ADMIN_API_KEY
+    HAS_SERVER_DEPS = True
+except ImportError:
+    HAS_SERVER_DEPS = False
+
 from python.kernelguard.licensing import verify_license_online, generate_license_token
 
 
+@unittest.skipUnless(HAS_SERVER_DEPS, "fastapi not installed; skipping SaaS server tests")
 class TestServerControlPlane(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
